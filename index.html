@@ -1,3 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv='refresh' content='0; URL=https://emanueleusai.com/'>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prof. Emanuele Usai</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+<body>
+  <div class="content">
+    <h1>Prof. Emanuele Usai</h1>
+    <p>Experimental Particle Physicist -- Professor of Physics</p>
+    <p>Researching high-energy collisions and detector design at the frontiers of physics.</p>
+    <p>--> Linkedin</p>
+    <p>--> Github</p>
+    <p>--> Publications</p>
+    <p>--> at the University of Alabama</p>
+  </div>
+
+  <script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
+
+  <canvas id="three-canvas"></canvas>
+
+  <!-- Shaders -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  </script>
+
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    varying vec2 vUv;
+    uniform float time;
+
+    void main() {
+      vec2 uv = vUv - 0.5;
+      float r = length(uv);
+      float swirl = sin(10.0 * r - time * 2.0);
+      float color = smoothstep(0.5, 0.0, r) * swirl;
+      gl_FragColor = vec4(vec3(color * 0.5 + 0.5), 1.0);
+    }
+  </script>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
