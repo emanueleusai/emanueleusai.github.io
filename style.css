@@ -4,17 +4,19 @@ body, html {
   height: 200vh; /* scrollable for rotation */
   font-family: 'Segoe UI', sans-serif;
   background: #000;
-  color: white;
+  color: black;
   overflow-x: hidden;
 }
 
 .content {
   position: absolute;
-  top: 40px;
-  left: 40px;
+  top: 0px;
+  left: 0px;
   z-index: 10;
-  max-width: 400px;
-  backdrop-filter: blur(6px);
+  max-width: 50vw;
+  /*max-width: 600px;*/
+  backdrop-filter: blur(3px) invert(100%);
+  /*backdrop-filter: invert(100%);*/
 }
 
 canvas {
@@ -22,4 +24,20 @@ canvas {
   top: 0;
   left: 0;
   display: block;
+}
+
+.bottom-three {
+     margin-bottom: 2cm;
+  }
+
+a:link {
+  color: #4169E1;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: #4169E1;
+  background-color: transparent;
+  text-decoration: none;
 }
