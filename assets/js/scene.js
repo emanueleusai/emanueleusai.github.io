@@ -6,7 +6,10 @@
 // barrel geometry drawn as faint glass. The hardware views add a procedural HGCAL layer and module
 // from hexaboard.js, loaded on first use.
 //
-// Contract (see SPEC.md): initScene({ canvas, reducedMotion, initialView }) -> { setView, replay, dispose }.
+// Contract (see SPEC.md): initScene({ canvas, reducedMotion, initialView, paused }) ->
+// { setView, replay, setPaused, dispose }. setPaused(true) stops everything that moves on its own
+// (drift, spin, pulses, the replay, the module's hit animation, scroll and pointer easing); the
+// scene still redraws when the view changes or the window resizes.
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -46,6 +49,9 @@ const MODULE_Q_EXPLODED = new THREE.Quaternion().setFromEuler(new THREE.Euler(-1
 const EXPLODE_SPACING = 0.13;     // m between the baseplate and the readout chips, fully exploded
 
 const WIDE = 960;                 // px: above this the event moves to the right of the text
+// Narrow screens: while the first screen (the hero's headline and lead) is in view, the subject
+// sits this fraction of the viewport height lower, and rises to the center as the page scrolls.
+const DROP = 0.3;
 const FIT = 1.1;                  // default aspect below which the camera pulls back (narrow screens)
 // Wide screens: the text sits in a left-aligned reading column (site.css: --col 760px after the
 // --gutter, clamp(16px, 5vw, 72px)), and the subject is placed on the "stage" to its right. A view's
@@ -471,7 +477,9 @@ function setFade(entry, f) {
 // Scene
 // ---------------------------------------------------------------------------------------------
 
-export async function initScene({ canvas, reducedMotion = false, initialView = 'home' } = {}) {
+export async function initScene({ canvas, reducedMotion = false, initialView = 'home', paused = false } = {}) {
+  // still: no autonomous motion (the OS asks for reduced motion, or the reader paused the scene).
+  let still = reducedMotion || !!paused;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'default' });
   renderer.setClearColor(new THREE.Color(COLOR.background), 1);
 
@@ -506,7 +514,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   const clock = () => performance.now() / 1000;
   let now = clock();
   let replayStart = -1;                 // seconds; -1 = not started
-  let pendingReplay = !reducedMotion;   // replay as soon as the tracks are in
+  let pendingReplay = !still;           // replay as soon as the tracks are in
   let tracksLoading = true;
   let joinPending = false;
   const replayTime = () => (replayStart >= 0 ? now - replayStart : (pendingReplay ? 0 : FINAL));
@@ -661,7 +669,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       hgcalFailed = true;
       if (!HARDWARE.has(viewName) || disposed) return;
       def = HARDWARE_FALLBACK;
-      if (!reducedMotion) startTransition(def, null);
+      if (!still) startTransition(def, null);
       else if (!dip.active) setState(def);  // (a pending dip applies the new def itself)
     }).finally(() => { needsRender = true; });
     return hgcalPromise;
@@ -714,7 +722,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     if (from) tr.v0.fill(0); else tr.v0.set(vel);
     viewVector(d, tr.to);
     tr.v1.fill(0);
-    if (!reducedMotion) { tr.v1[K.azimuth] = d.orbit; tr.v1[K.roll] = d.spin; }
+    if (!still) { tr.v1[K.azimuth] = d.orbit; tr.v1[K.roll] = d.spin; }
     for (const k of ANGLES) {
       // Aim for where the current drift would carry us, then wrap to the nearest turn.
       tr.to[k] = nearestAngle(tr.to[k], tr.from[k] + tr.v0[k] * 0.8);
@@ -757,6 +765,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   function enterJoin() {
     // Cut to the collision point (the camera would otherwise fly through the detector), then
     // replay the event while pulling out. The cut happens while the old event is still dark.
+    if (still) { setState(def); return; }   // paused during the dip: no pull-out, no replay
     const d = VIEWS.join;
     viewVector(d, joinFrom);
     joinFrom[K.dist] = Math.log(d.from.dist); joinFrom[K.polar] = d.from.polar;
@@ -779,7 +788,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     if (HARDWARE.has(next)) ensureHGCAL();
     needsRender = true;
 
-    if (reducedMotion) {
+    if (still) {
       // No flying: a quick dip to dark, swap, fade back in.
       if (instant) { setState(def); dip.active = false; fade = 1; return; }
       startDip(0.5, () => setState(def));
@@ -797,7 +806,9 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       // The hardware is built on first use (textures painted, shaders compiled). Hold the flight
       // until it is ready, briefly, so that work does not stall the camera halfway.
       Promise.race([hgcalPromise, new Promise(r => setTimeout(r, 1500))]).then(() => {
-        if (token === flightToken && !disposed) startTransition(def, null);
+        if (token !== flightToken || disposed) return;
+        if (still) startDip(0.5, () => setState(def));   // paused while waiting: no flight
+        else startTransition(def, null);
       });
       return;
     }
@@ -805,10 +816,15 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   }
 
   // Dip to dark and back, swapping the view at the darkest point. A dip that is already on its way
-  // down keeps its timing; one on its way back up restarts from the current brightness.
+  // down keeps its timing and makes both changes at the swap; one on its way back up restarts
+  // from the current brightness.
   function startDip(dur, apply) {
+    if (dip.active && !dip.swapped) {
+      const prev = dip.apply;
+      dip.apply = prev ? () => { prev(); apply(); } : apply;
+      return;
+    }
     dip.apply = apply;
-    if (dip.active && !dip.swapped) return;
     dip.active = true;
     dip.swapped = false;
     dip.dur = dur;
@@ -816,7 +832,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   }
 
   function replay() {
-    if (disposed || reducedMotion) return;
+    if (disposed || still) return;
     if (tracksLoading) { pendingReplay = true; return; }   // starts when the tracks arrive
     pendingReplay = false;
     replayStart = clock();
@@ -836,7 +852,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       import('three/addons/environments/RoomEnvironment.js').catch(() => {});
     }), 6000);
   }
-  if (viewName === 'join' && !reducedMotion) {
+  if (viewName === 'join' && !still) {
     viewVector(def, joinFrom);
     joinFrom[K.dist] = Math.log(def.from.dist); joinFrom[K.polar] = def.from.polar;
     joinFrom[K.azimuth] = def.from.azimuth; joinFrom[K.fov] = def.from.fov;
@@ -885,7 +901,9 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   const target = new THREE.Vector3();
   const sph = new THREE.Spherical();
   const tmp = new THREE.Vector3();
-  let lastFov = -1, lastShift = -1, lastAspect = -1, lastNear = -1;
+  let lastFov = -1, lastShift = -1, lastAspect = -1, lastNear = -1, lastDrop = -1;
+  let dropStep = -1;                    // still scenes: the drop in use (it changes with a dip, not a glide)
+  let dropPending = false;
 
   function hermite(sg, T) {
     for (let k = 0; k < NK; k++) {
@@ -904,7 +922,8 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   }
 
   // Load fade of a layer (0..1); keeps the loop rendering while it runs.
-  let moving = false;
+  let moving = false;                   // something changes this frame (drawn at the full rate)
+  let drifting = false;                 // only the slow orbit/spin drift changes
   function loadFade(name) {
     const l = layers[name];
     if (!l) return 0;
@@ -913,8 +932,25 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     return smooth(0, 0.7, a);
   }
 
+  // Narrow screens: how far below the center the subject sits (fraction of the viewport height).
+  // It follows the scroll while the scene moves; a still scene switches between the two places
+  // halfway down the first screen, through a short dip to dark.
+  function heroDrop() {
+    if (width > WIDE) { dropStep = -1; return 0; }
+    const out = clamp((window.scrollY || 0) / height, 0, 1);
+    if (!still) { dropStep = -1; return DROP * (1 - out); }
+    const want = () => (clamp((window.scrollY || 0) / height, 0, 1) < 0.5 ? DROP : 0);
+    if (dropStep < 0) dropStep = want();
+    else if (want() !== dropStep && !(dropPending && dip.active)) {
+      dropPending = true;
+      startDip(0.5, () => { dropPending = false; dropStep = want(); });
+    }
+    return dropStep;
+  }
+
   function update(dt) {
     moving = false;
+    drifting = false;
 
     if (dip.active) {
       const s = (now - dip.start) / dip.dur;
@@ -932,18 +968,18 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       hermite(s, tr.dur);
       if (s >= 1) tr.active = false;
       moving = true;
-    } else if (!reducedMotion && (def.orbit || def.spin)) {
+    } else if (!still && (def.orbit || def.spin)) {
       state[K.azimuth] += def.orbit * dt;
       state[K.roll] += def.spin * dt;
       vel.fill(0);
       vel[K.azimuth] = def.orbit; vel[K.roll] = def.spin;
-      moving = true;
+      drifting = true;                  // slow: drawn at a reduced rate (see frame)
     } else {
       vel.fill(0);
     }
 
     // Scroll-linked roll and pointer parallax, both eased.
-    if (!reducedMotion) {
+    if (!still) {
       const goal = (window.scrollY || 0) * 0.00025;
       const ease = 1 - Math.exp(-dt * 4);
       if (Math.abs(goal - scrollRoll) > 1e-4) { scrollRoll += (goal - scrollRoll) * ease; moving = true; }
@@ -970,12 +1006,14 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     const fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(state[K.fov]) / 2) * Math.pow(fit, 0.58)));
     const shift = state[K.shift] * stage.center;
     const near = clamp(sph.radius * 0.02, 0.005, 0.1);
-    if (fov !== lastFov || shift !== lastShift || aspect !== lastAspect || near !== lastNear) {
-      lastFov = fov; lastShift = shift; lastAspect = aspect; lastNear = near;
+    const drop = heroDrop();
+    if (fov !== lastFov || shift !== lastShift || aspect !== lastAspect || near !== lastNear || drop !== lastDrop) {
+      if (drop !== lastDrop) needsRender = true;
+      lastFov = fov; lastShift = shift; lastAspect = aspect; lastNear = near; lastDrop = drop;
       camera.fov = fov;
       camera.aspect = aspect;
       camera.near = near;
-      if (shift > 0.001) camera.setViewOffset(width, height, -shift * width, 0, width, height);
+      if (shift > 0.001 || drop > 0.001) camera.setViewOffset(width, height, -shift * width, -drop * height, width, height);
       else camera.clearViewOffset();
       camera.updateProjectionMatrix();
     }
@@ -1002,8 +1040,8 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       u.uOpacity.value = ev * loadFade('tracks');
       u.uSolo.value = soloIndex;
       u.uSoloMix.value = soloIndex >= 0 ? solo : 0;
-      u.uSoloTime.value = reducedMotion ? -1 : now % 4.6;
-      if (solo > 0.01 && !reducedMotion) moving = true;
+      u.uSoloTime.value = still ? -1 : now % 4.6;
+      if (solo > 0.01 && !still) moving = true;
       layers.tracks.object.visible = u.uOpacity.value > 0.002;
     }
     if (layers.soloExtension) {
@@ -1046,7 +1084,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     flash.visible = flash.material.opacity > 0.003;
     const gs = Math.min(0.55, camDist * 0.35);
     vertexGlow.scale.set(gs, gs, 1);
-    const soloBeat = reducedMotion ? 0 : solo * Math.exp(-(now % 4.6) / 0.3);   // the lone track's pulse leaves the vertex
+    const soloBeat = still ? 0 : solo * Math.exp(-(now % 4.6) / 0.3);   // the lone track's pulse leaves the vertex
     vertexGlow.material.opacity = ev * (0.42 * smooth(0.05, 0.5, t) + 0.5 * soloBeat);
     vertexGlow.visible = vertexGlow.material.opacity > 0.003;
 
@@ -1062,14 +1100,14 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       const mr = clamp(state[K.mrot], 0, 1);
       if (Math.abs(mr - lastMrot) > 1e-4) { lastMrot = mr; modulePivot.quaternion.slerpQuaternions(MODULE_Q, MODULE_Q_EXPLODED, smooth(0, 1, mr)); }
       // The sensor-hit animation runs only on the exploded module; update() says when it changed.
-      if (!reducedMotion && hgcal.module.group.visible && hgcal.module.update(dt)) moving = true;
+      if (!still && hgcal.module.group.visible && hgcal.module.update(dt)) moving = true;
     }
 
     return moving;
   }
 
   // --- loop -------------------------------------------------------------------------------------
-  let raf = 0, last = 0, lost = false, wasMoving = true;
+  let raf = 0, last = 0, lost = false, wasMoving = true, lastDraw = 0;
   function frame(ms) {
     raf = 0;
     if (disposed || lost || document.hidden) return;
@@ -1080,9 +1118,11 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     try {
       const moving = update(dt);
       // Idle views cost nothing: render only while something changes, plus one settling frame
-      // (a long frame can skip past the end of a fade).
-      if (moving || needsRender || wasMoving) {
+      // (a long frame can skip past the end of a fade). A slow drift alone does not need 60-120
+      // frames a second: it is drawn at about 30, which saves battery on long reads.
+      if (moving || needsRender || wasMoving || (drifting && now - lastDraw > 0.026)) {
         needsRender = false;
+        lastDraw = now;
         renderer.render(scene, camera);
       }
       wasMoving = moving;
@@ -1128,5 +1168,20 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   // never wait longer than a moment on a slow connection: the rest streams in and fades up.
   await Promise.race([tracksReady, new Promise(r => setTimeout(r, 2500))]);
 
-  return { setView, replay, dispose };
+  function setPaused(p) {
+    const next = !!p || reducedMotion;
+    if (disposed || next === still) return;
+    still = next;
+    if (still) {
+      // Land where things were heading: a flight ends at its view, a replay shows its last frame.
+      if (tr.active) setState(def);
+      pendingReplay = false;
+      replayStart = -1;
+      joinPending = false;
+    }
+    needsRender = true;
+    start();
+  }
+
+  return { setView, replay, setPaused, dispose };
 }

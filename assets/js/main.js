@@ -41,13 +41,46 @@ async function startScene() {
   }
   try {
     const { initScene } = await import('./scene.js');
-    scene = await initScene({ canvas, reducedMotion, initialView: currentSceneView() });
+    scene = await initScene({ canvas, reducedMotion, initialView: currentSceneView(), paused: storedPause() });
     activeView = null;
     setView(currentSceneView(), { instant: true });
+    setupPauseButton();
   } catch (err) {
     console.error('[scene] disabled:', err);
     root.classList.add('no-webgl');
   }
+}
+
+// ---------------------------------------------------------------------------
+// Pause control for the moving background (WCAG 2.2.2). The footer holds a
+// hidden <button class="scene-toggle">; it appears only while the 3D scene runs
+// with motion (under prefers-reduced-motion the scene is already still).
+// The visible label says what the button does next, so it carries no
+// aria-pressed (a toggle whose label changes would read "Play animation, pressed").
+// ---------------------------------------------------------------------------
+const PAUSE_KEY = 'eu-scene-paused';
+function storedPause() {
+  if (reducedMotion) return false;
+  try { return localStorage.getItem(PAUSE_KEY) === '1'; } catch { return false; }
+}
+function setupPauseButton() {
+  const button = document.querySelector('.scene-toggle');
+  if (!button || !scene?.setPaused || reducedMotion) return;
+  let paused = storedPause();
+  // The label also covers the looping scroll cue in the hero (site.css: .motion-paused).
+  const show = () => {
+    button.textContent = paused ? 'Play animation' : 'Pause animation';
+    root.classList.toggle('motion-paused', paused);
+  };
+  button.removeAttribute('aria-pressed');
+  show();
+  button.hidden = false;
+  button.addEventListener('click', () => {
+    paused = !paused;
+    scene.setPaused(paused);
+    show();
+    try { localStorage.setItem(PAUSE_KEY, paused ? '1' : '0'); } catch { /* private mode: not remembered */ }
+  });
 }
 
 // Sections can retarget the camera as they scroll past the middle of the
@@ -118,6 +151,20 @@ toggle?.addEventListener('click', () => {
   nav.dataset.open = String(open);
   toggle.setAttribute('aria-expanded', String(open));
 });
+// Close the menu when one of its links is followed (the current page's link too), when keyboard
+// focus moves on past it, and when the reader taps the dimmed page outside it. That tap only
+// closes the menu: it does not also follow a link that happens to lie under the dimming.
+nav?.addEventListener('click', e => { if (e.target.closest('a[href]')) closeMenu(); });
+nav?.addEventListener('focusout', e => {
+  if (nav.dataset.open === 'true' && e.relatedTarget && !nav.contains(e.relatedTarget)) closeMenu();
+});
+window.addEventListener('click', e => {
+  if (nav?.dataset.open !== 'true' || nav.contains(e.target)) return;
+  closeMenu();
+  if (e.target.closest?.('.site-header')) return;   // the header is not dimmed: let the brand link work
+  e.preventDefault();
+  e.stopPropagation();
+}, true);
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && nav?.dataset.open === 'true') {
     closeMenu();

@@ -68,6 +68,18 @@ img { max-width: 100%; height: auto; display: block; }
 a { color: var(--link); text-decoration: none; text-underline-offset: 3px; transition: color 0.2s; }
 a:hover { color: var(--link-hover); text-decoration: underline; }
 :focus-visible { outline: 2px solid var(--track); outline-offset: 3px; border-radius: 4px; }
+[tabindex="-1"]:focus { outline: none; }
+
+/* Links inside running text are underlined: color alone does not set them apart (WCAG 1.4.1). */
+main :is(p, dd, small, .key-papers__meta, li:not(.key-papers li, .contact-list li)) a:not([class]),
+.site-footer p a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(143, 208, 255, 0.5);
+  text-underline-offset: 3px;
+}
+main :is(p, dd, small, .key-papers__meta, li:not(.key-papers li, .contact-list li)) a:not([class]):hover,
+.site-footer p a:hover { text-decoration-color: currentColor; }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
@@ -78,6 +90,8 @@ h1, h2, h3, h4 {
   font-weight: 600;
 }
 h1 { font-size: clamp(2.5rem, 6vw, 4.75rem); letter-spacing: -0.03em; font-weight: 700; }
+@media (max-width: 400px) { h1 { font-size: 2.15rem; } }
+h1, h2, h3, .card__title, .timeline__title { text-wrap: balance; }
 h2 { font-size: clamp(1.6rem, 3vw, 2.25rem); }
 h3 { font-size: 1.25rem; }
 h4 { font-size: 1.05rem; }
@@ -136,7 +150,7 @@ body[data-dim="high"] .scene-veil { background: rgba(4, 6, 11, 0.7); }
   height: var(--header-h);
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding: 0 var(--gutter);
-  background: linear-gradient(180deg, rgba(4, 6, 11, 0.85), rgba(4, 6, 11, 0.55));
+  background: linear-gradient(180deg, rgba(4, 6, 11, 0.9), rgba(4, 6, 11, 0.78));
   backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
   border-bottom: 1px solid var(--border);
 }
@@ -179,7 +193,8 @@ body[data-dim="high"] .scene-veil { background: rgba(4, 6, 11, 0.7); }
   .nav__list {
     position: fixed; top: var(--header-h); left: 0; right: 0;
     flex-direction: column; gap: 2px; padding: 12px var(--gutter) 20px;
-    background: rgba(6, 9, 16, 0.97);
+    background: rgb(6, 9, 16);
+    box-shadow: 0 100vmax 0 100vmax rgba(4, 6, 11, 0.6);
     max-height: calc(100vh - var(--header-h)); overflow-y: auto;
     border-bottom: 1px solid var(--border);
     transform: translateY(-8px); opacity: 0; visibility: hidden;
@@ -416,7 +431,7 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
 /* Callout (recruiting, contact) */
 .callout {
   position: relative; overflow: hidden;
-  background: linear-gradient(135deg, rgba(255, 210, 63, 0.14), rgba(77, 184, 255, 0.08) 60%, rgba(70, 226, 122, 0.08));
+  background: linear-gradient(135deg, rgba(255, 210, 63, 0.14), rgba(77, 184, 255, 0.08) 60%, rgba(70, 226, 122, 0.08)), rgba(8, 12, 21, 0.8);
   border: 1px solid rgba(255, 210, 63, 0.35); border-radius: var(--radius);
   padding: clamp(24px, 4vw, 44px);
   backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
@@ -460,7 +475,18 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
 .site-footer p { margin: 0 0 4px; }
 .site-footer__links { display: flex; flex-wrap: wrap; gap: 8px 18px; list-style: none; padding: 0; margin: 0; align-items: flex-start; }
 .site-footer__links li + li { margin-top: 0; }
-.site-footer__small { margin-top: 24px; font-size: 0.8rem; color: #6b778c; }
+.site-footer__small { margin-top: 24px; font-size: 0.8rem; color: #76829a; }
+/* Pause/play for the moving background (main.js shows it only while the 3D scene runs). */
+.scene-toggle {
+  margin: 0; padding: 4px 0; border: 0; border-radius: 4px; background: none;
+  font: inherit; color: var(--text-2); white-space: nowrap; cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: rgba(195, 204, 218, 0.45); text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+.scene-toggle:hover { color: var(--link-hover); text-decoration-color: currentColor; }
+.scene-toggle[hidden] { display: none; }
+/* Paused by the reader: the hero's scroll cue stops looping too (WCAG 2.2.2). */
+.motion-paused .scroll-cue::after { animation: none; }
 
 /* ==========================================================================
    Page-specific components
@@ -573,6 +599,33 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
   .cv-degrees .facts { grid-template-columns: 4.75rem minmax(0, 1fr); }
 }
 
+/* Eyebrow: when the label wraps (e.g. home hero at 390px), keep the dash on the first line instead of centered between lines. Single-line eyebrows look unchanged. */
+.eyebrow { align-items: flex-start; }
+.eyebrow::before { flex: none; margin-top: calc(0.825em - 0.5px); margin-top: calc(0.5lh - 0.5px); }
+
+/* Home hero: the title/university line is the key line for committees; make it legible over the 3D event.
+   (On narrow screens the dark halo from the max-width: 960px block below still applies.) */
+.hero--home .hero__meta { font-family: var(--font-sans); font-size: 1.05rem; font-weight: 500; color: var(--text-2); letter-spacing: 0; }
+@media (min-width: 961px) {
+  .hero--home .hero__meta { text-shadow: 0 1px 20px rgba(0, 0, 0, 0.8); }
+}
+
+/* No 3D available (no WebGL or no JS): hide the empty scene stretches and the prompts that promise a 3D tour.
+   The home page’s color legend (.scene-gap--legend) stays because it still describes the static fallback image.
+   No JS is matched with a media query rather than .no-js, so pages with JS do not hide these before main.js runs. */
+.no-webgl .scene-gap:not(.scene-gap--legend),
+.no-webgl [data-needs-3d] { display: none; }
+@media (scripting: none) {
+  .scene-gap:not(.scene-gap--legend), [data-needs-3d] { display: none; }
+}
+
+/* join.html is the only page using .container--wide (How to join cards, Lab life photo panel). On desktop these pass over the 3D event, so give them a near-opaque backdrop to keep text readable. */
+@media (min-width: 961px) {
+  .container--wide :is(.card, .panel) { background: var(--panel-strong); }
+}
+/* join.html "Why join the group": the items run 2-5 lines, so space them a little more than the default 0.35em. */
+.join-why li + li { margin-top: 0.75em; }
+
 /* --------------------------------------------------------------------------
    Entrance animation (applied by main.js; respects reduced motion)
    -------------------------------------------------------------------------- */
@@ -584,16 +637,61 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
 ::view-transition-old(main-content), ::view-transition-new(main-content) { animation-duration: 0.45s; animation-timing-function: var(--ease); }
 main { view-transition-name: main-content; }
 
-/* Small screens: center the event, keep text readable */
+/* Narrow screens (up to scene.js WIDE = 960px): the event is centered behind the text instead of
+   beside it (lower while the first screen is in view), so the veil darkens evenly and the hero
+   text gets a dark halo where tracks cross it. */
+@media (max-width: 960px) {
+  .scene-veil { background: linear-gradient(180deg, rgba(4, 6, 11, 0.5), rgba(4, 6, 11, 0.64)); }
+  .scene-fallback { top: 35vh; }   /* the static image (no WebGL) sits below the headline too */
+  .hero__lead, .hero__meta, .lead, .eyebrow {
+    text-shadow: 0 0 2px rgba(4, 6, 11, 0.95), 0 0 8px rgba(4, 6, 11, 0.9), 0 0 18px rgba(4, 6, 11, 0.8);
+  }
+}
+/* Small laptops (961-1259px): scene.js caps the stage's left edge at 66% of the width, so keep the
+   hero text left of it. */
+@media (min-width: 961px) and (max-width: 1259px) {
+  .hero { max-width: calc(66vw - var(--gutter) - 24px); }
+}
+/* Small screens */
 @media (max-width: 720px) {
   body { font-size: 16px; }
-  .scene-veil { background: linear-gradient(180deg, rgba(4, 6, 11, 0.35), rgba(4, 6, 11, 0.6)); }
   .hero { padding-top: 16px; }
   .panel { border-radius: 14px; }
+}
+/* 320px (400% zoom): let long labels wrap instead of running off the screen (WCAG 1.4.10). */
+@media (max-width: 400px) {
+  .link-arrow { white-space: normal; }
+  .tag { white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* Without JavaScript: show the static event image, and keep the menu reachable on small screens
+   (the Menu button needs main.js). A media query rather than .no-js, so pages with JS do not
+   flash this layout before main.js runs. */
+@media (scripting: none) {
+  .scene-fallback { display: block; }
+  #scene { display: none; }
+}
+@media (scripting: none) and (max-width: 960px) {
+  .site-header {
+    position: relative; height: auto; min-height: var(--header-h);
+    flex-wrap: wrap; row-gap: 4px; padding-top: 10px; padding-bottom: 10px;
+  }
+  .nav__toggle { display: none; }
+  .nav__list {
+    position: static; flex-direction: row; flex-wrap: wrap; gap: 2px 4px; padding: 0; max-height: none;
+    background: none; border: 0; box-shadow: none; transform: none; opacity: 1; visibility: visible;
+  }
+  .nav__link { padding: 6px 10px; font-size: 0.95rem; }
+  .nav__link--cta { margin: 0; }
+  main { padding-top: 24px; }
 }
 
 @media print {
   #scene, .scene-veil, .scene-fallback, .site-header, .scroll-cue { display: none !important; }
+  .skip-link, .nav__toggle, .scene-gap, .scene-toggle { display: none !important; }
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .hero, .hero--short { min-height: 0; padding-bottom: 16px; }
+  .hero h1, .hero__lead, .hero__meta, .lead, .eyebrow { text-shadow: none; }
   html, body { background: #fff; color: #000; }
   .panel, .card, .stat, .callout { background: none; border: 1px solid #ccc; box-shadow: none; backdrop-filter: none; }
   h1, h2, h3, h4, strong, .pub__title, .person__name, .timeline__title { color: #000; }
