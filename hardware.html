@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detector hardware · Emanuele Usai</title>
+  <meta name="description" content="How my lab at The University of Alabama quality-controls about 10,000 hexaboards for the CMS High Granularity Calorimeter, the endcap upgrade for the HL-LHC.">
+  <link rel="canonical" href="https://emanueleusai.com/hardware.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Emanuele Usai">
+  <meta property="og:title" content="Detector hardware · Emanuele Usai">
+  <meta property="og:description" content="How my lab at The University of Alabama quality-controls about 10,000 hexaboards for the CMS High Granularity Calorimeter, the endcap upgrade for the HL-LHC.">
+  <meta property="og:url" content="https://emanueleusai.com/hardware.html">
+  <meta property="og:image" content="https://emanueleusai.com/assets/img/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#04060b">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="assets/js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="scene-fallback" aria-hidden="true"></div>
+  <div class="scene-veil" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img class="brand__mark" src="assets/img/mark.svg" alt="" width="28" height="28">
+      <span class="brand__text">Emanuele Usai<span class="brand__sub">Particle physics · UA</span></span>
+    </a>
+    <nav class="nav" aria-label="Main" data-open="false">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-list">
+        <span class="visually-hidden">Menu</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <ul class="nav__list" id="nav-list">
+        <li><a class="nav__link" href="research.html">Research</a></li>
+        <li><a class="nav__link" href="hardware.html">Hardware</a></li>
+        <li><a class="nav__link" href="teaching.html">Teaching</a></li>
+        <li><a class="nav__link" href="publications.html">Publications</a></li>
+        <li><a class="nav__link" href="cv.html">CV</a></li>
+        <li><a class="nav__link nav__link--cta" href="join.html">Join the lab</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1" data-view="hardware">
+    <section class="hero hero--short" aria-labelledby="hardware-title">
+      <p class="eyebrow">Hardware</p>
+      <h1 id="hardware-title">Building the next CMS calorimeter</h1>
+      <p class="hero__lead">CERN’s Large Hadron Collider is being upgraded to the High-Luminosity LHC (HL-LHC), with many more collisions and therefore far more radiation in the detector. CMS is getting ready by replacing the calorimeters at its two ends, which measure particle energies, with the High Granularity Calorimeter (HGCAL), built largely from hexagonal silicon modules. My lab at The University of Alabama is in charge of quality control for about 10,000 of the hexagonal readout boards, or hexaboards, that read those modules out.</p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="join.html">Join the lab</a>
+        <a class="btn" href="#lab">Skip the 3D tour</a>
+      </div>
+      <a class="scroll-cue" href="#hexaboard">Scroll to fly into the detector</a>
+    </section>
+
+    <div class="scene-gap" aria-hidden="true">
+      <p class="scene-caption">One HGCAL layer: hundreds of hexagonal silicon modules</p>
+    </div>
+
+    <section class="section" id="hexaboard" data-scene="hardware-module" aria-labelledby="hexaboard-title">
+      <div class="container">
+        <article class="panel panel--accent reveal">
+          <p class="eyebrow">01 · The detector</p>
+          <h2 id="hexaboard-title">What is a hexaboard?</h2>
+          <p>HGCAL measures energy the way most calorimeters do: dense metal plates make each incoming particle break up into a shower of lower-energy particles, and sensitive layers between the plates sample the energy of that shower. What is new is how finely it samples.</p>
+          <p>Where radiation is highest, the sensitive layers are made of silicon: about six million cells, each between half a square centimeter and one square centimeter, that record the shape of every shower in three dimensions. Silicon also responds fast enough to time its signals precisely, which helps separate the many collisions that happen in each crossing of the proton beams. (Farther out, where radiation is lower, plastic scintillator tiles are used instead.) The silicon comes as hexagonal sensors, a shape that makes good use of the round wafers they are cut from and covers a surface without gaps.</p>
+          <p>A <strong>hexaboard</strong> is the hexagonal printed circuit board that turns a bare sensor into a working detector module. It is glued directly on top of the sensor. Holes through the board let fine wire bonds connect the sensor’s cells to the board, and readout chips on the board amplify and digitize the tiny signals, measuring how much energy landed in each cell. Once a board is glued to its sensor, it stays there, so problems are best caught before that happens. That is where my lab comes in.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="scene-gap" aria-hidden="true">
+      <p class="scene-caption">A single module</p>
+    </div>
+
+    <section class="section" id="module" data-scene="hardware-exploded" aria-labelledby="module-title">
+      <div class="container">
+        <article class="panel panel--ecal reveal">
+          <p class="eyebrow eyebrow--ecal">02 · The module</p>
+          <h2 id="module-title">Inside a module</h2>
+          <p>A silicon module is a thin stack of layers glued together. From the bottom up:</p>
+          <ol class="steps">
+            <li>
+              <h3>Baseplate</h3>
+              <p>A rigid plate that gives the module its strength and conducts heat away from it. A thin insulating film separates it from the sensor.</p>
+            </li>
+            <li>
+              <h3>Silicon sensor</h3>
+              <p>A hexagonal sensor divided into hundreds of cells. Each cell works like a diode with a voltage across it: a charged particle crossing the silicon frees electric charge, and the voltage sweeps that charge out as a small electrical signal.</p>
+            </li>
+            <li>
+              <h3>Hexaboard and readout chips</h3>
+              <p>The hexagonal circuit board glued on top of the sensor. The readout chips mounted on it amplify and digitize the signals from the cells and send the data on.</p>
+            </li>
+            <li>
+              <h3>Wire bonds</h3>
+              <p>Fine wires that reach through holes in the hexaboard and connect each cell of the sensor to the board.</p>
+            </li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <div class="scene-gap" aria-hidden="true">
+      <p class="scene-caption">Exploded view: the layers of a silicon module</p>
+    </div>
+
+    <section class="section" id="lab" data-scene="hardware" aria-labelledby="lab-title">
+      <div class="container">
+        <article class="panel panel--accent reveal">
+          <p class="eyebrow">03 · The lab</p>
+          <h2 id="lab-title">The UA CMS HGCAL laboratory</h2>
+          <p>I set up the UA CMS HGCAL laboratory in 2024. Our task is the quality control of about 10,000 hexaboards: boards come through the lab to be inspected and tested, so that problems are caught before they are built into detector modules.</p>
+          <p>It is a team effort. Our postdoctoral researcher, Axel Perraguin, works on the construction of HGCAL, and undergraduate researchers inspect and test the boards at the bench.</p>
+          <dl class="facts">
+            <dt>Established</dt>
+            <dd>2024, at The University of Alabama</dd>
+            <dt>Task</dt>
+            <dd>Quality control of about 10,000 hexaboards for the CMS HGCAL</dd>
+            <dt>Funding</dt>
+            <dd>Co-PI on the Fermilab (FNAL) award “High Luminosity (HL) LHC CMS Detector Upgrade Project Calorimeter Endcap” (August 2024 – August 2026)</dd>
+          </dl>
+          <figure class="figure">
+            <img src="assets/img/lab-hexaboard-team-lg.webp" srcset="assets/img/lab-hexaboard-team-sm.webp 800w, assets/img/lab-hexaboard-team-lg.webp 1448w" sizes="(max-width: 820px) calc(100vw - 72px), 680px" width="1448" height="1086" alt="Six members of the group stand around a bench in the HGCAL lab; one holds up a hexaboard while the others look on. A black enclosure sits on the bench." loading="lazy" decoding="async">
+            <figcaption>Members of the group with a hexaboard in the UA CMS HGCAL lab.</figcaption>
+          </figure>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="testing" aria-labelledby="testing-title">
+      <div class="container">
+        <article class="panel reveal">
+          <p class="eyebrow">04 · Quality control</p>
+          <h2 id="testing-title">How a board gets tested</h2>
+          <p>With about 10,000 boards to check, the work has to be careful and repeatable. Each board is looked at, powered up and tested, and the lab keeps track of it all.</p>
+          <ol class="steps steps--photos">
+            <li>
+              <h3>Automated visual inspection</h3>
+              <p>The board sits on a motorized XY stage that moves it under a microscope camera, so its whole surface can be imaged and checked for visible defects.</p>
+              <figure class="figure">
+                <img src="assets/img/visual-inspection-lg.webp" srcset="assets/img/visual-inspection-sm.webp 800w, assets/img/visual-inspection-lg.webp 1600w" sizes="(max-width: 720px) calc(100vw - 120px), 600px" width="1600" height="1200" alt="Visual-inspection station in a dark enclosure: a green hexaboard on a stage mounted on motorized rails, a microscope camera on a stand with its own display, and control software on a computer monitor." loading="lazy" decoding="async">
+                <figcaption>The visual-inspection station: a motorized XY stage carries the board under a microscope camera.</figcaption>
+              </figure>
+            </li>
+            <li>
+              <h3>Electrical tests</h3>
+              <p>On the test stand, several hexaboards at a time are connected through adapter boards to a controller board that runs the tests. These check that each board and its readout chips work electrically.</p>
+              <figure class="figure">
+                <img src="assets/img/test-stand-lg.webp" srcset="assets/img/test-stand-sm.webp 800w, assets/img/test-stand-lg.webp 1600w" sizes="(max-width: 720px) calc(100vw - 120px), 600px" width="1600" height="1200" alt="Top-down view of a test stand on a lab table: three green hexaboards, each with a red adapter board, connected to a long white board and to a small controller board at left, with a bench power supply at the edge of the table." loading="lazy" decoding="async">
+                <figcaption>A test stand with three hexaboards (green) on red adapter boards, wired to the controller board at left.</figcaption>
+              </figure>
+            </li>
+            <li>
+              <h3>Live monitoring</h3>
+              <p>A live dashboard on a large screen monitors the lab and our test results, so the whole team can see at a glance how testing is going.</p>
+              <figure class="figure">
+                <img src="assets/img/group-dashboard-lg.webp" srcset="assets/img/group-dashboard-sm.webp 800w, assets/img/group-dashboard-lg.webp 1448w" sizes="(max-width: 720px) calc(100vw - 120px), 600px" width="1448" height="1086" alt="Six members of the group pose in the lab around a large screen showing a monitoring dashboard with live graphs, with research posters on the wall behind them." loading="lazy" decoding="async">
+                <figcaption>The group with the lab’s monitoring dashboard.</figcaption>
+              </figure>
+            </li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="students" aria-labelledby="students-title">
+      <div class="container">
+        <article class="panel panel--ecal reveal">
+          <p class="eyebrow eyebrow--ecal">05 · Students</p>
+          <h2 id="students-title">Undergraduates at the bench</h2>
+          <p>Undergraduate researchers are at the center of the lab: they inspect and test the hexaboards, and the boards they check go into the detector CMS will use at the HL-LHC. Five undergraduates have worked on hexaboards with us since 2024.</p>
+          <ul>
+            <li>Nathan Nguyen, an undergraduate in the lab from 2024 to 2026, received the <strong>2024 US CMS HL-LHC Detector Upgrade Essential Contribution Award</strong> and the 2026 Randall Outstanding Undergraduate Research Award. He is now a graduate student in the group.</li>
+            <li>Students working in the lab have presented talks and posters at APS meetings (2025, 2026) and at SESAPS, the Southeastern Section of the American Physical Society (2024, 2025).</li>
+          </ul>
+          <p><a class="link-arrow" href="join.html">Research opportunities for students</a></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="computing" aria-labelledby="computing-title">
+      <div class="container">
+        <article class="panel panel--hcal reveal">
+          <p class="eyebrow eyebrow--hcal">06 · Computing</p>
+          <h2 id="computing-title">Computing for analysis and AI</h2>
+          <p>Analyzing CMS data and training machine-learning models take a lot of computing power. I set up the University of Alabama’s high-performance computing cluster for CMS data analysis and machine learning, in service since May 2024.</p>
+          <p>Running computing for a research group is not new to me: at Brown University I administered the local computing and storage cluster, with 512 processor cores and 256 TB of storage.</p>
+          <figure class="figure">
+            <img src="assets/img/group-cluster-lg.webp" srcset="assets/img/group-cluster-sm.webp 800w, assets/img/group-cluster-lg.webp 1448w" sizes="(max-width: 820px) calc(100vw - 72px), 680px" width="1448" height="1086" alt="Six members of the group gathered around an open server rack of the University of Alabama computing cluster." loading="lazy" decoding="async">
+            <figcaption>The group with the UA cluster for CMS data analysis and machine learning.</figcaption>
+          </figure>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="earlier" aria-labelledby="earlier-title">
+      <div class="container">
+        <article class="panel reveal">
+          <p class="eyebrow">07 · Before Alabama</p>
+          <h2 id="earlier-title">Earlier detector work</h2>
+          <p>HGCAL is not the first CMS detector I have worked on. My bachelor’s thesis, in 2009, was about getting the CMS electromagnetic calorimeter ready for its first data.</p>
+          <ol class="timeline">
+            <li class="timeline__item">
+              <p class="timeline__date">2018 – 2022</p>
+              <div>
+                <p class="timeline__title">Silicon modules for the CMS Outer Tracker upgrade</p>
+                <p class="timeline__place">Brown University, Fermilab and DESY</p>
+                <div class="timeline__body"><p>Assembly of PS-type (pixel-strip) silicon sensor modules for the upgraded Outer Tracker, the outer part of the CMS tracking detector. I worked on robotic automation at the Brown and Fermilab assembly sites, and on an electron beam test of the modules at DESY, including the analysis of its data.</p></div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <p class="timeline__date">2017</p>
+              <div>
+                <p class="timeline__title">Jet performance studies for the HGCAL design report</p>
+                <p class="timeline__place"><a href="https://cds.cern.ch/record/2293646">The Phase-2 Upgrade of the CMS Endcap Calorimeter</a>, Technical Design Report, CERN-LHCC-2017-023</p>
+                <div class="timeline__body"><p>Studies of how well HGCAL would reconstruct jets and their internal structure (jet substructure), for the report that set out the detector’s design.</p></div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <p class="timeline__date">2011 – 2012</p>
+              <div>
+                <p class="timeline__title">Monitoring the ECAL photodetectors</p>
+                <p class="timeline__place">INFN Torino</p>
+                <div class="timeline__body"><p>Monitoring of the dark current (the small current that flows even with no light) and the temperature of the avalanche photodiodes (APDs) that read out the crystals of the CMS electromagnetic calorimeter (ECAL).</p></div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <p class="timeline__date">2009</p>
+              <div>
+                <p class="timeline__title">Bachelor’s thesis</p>
+                <p class="timeline__place">University of Turin</p>
+                <div class="timeline__body"><p>“Preparation for data taking of the Electromagnetic Calorimeter of CMS,” written as CMS prepared for the LHC’s first collisions.</p></div>
+              </div>
+            </li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="talks" aria-labelledby="talks-title">
+      <div class="container">
+        <article class="panel panel--hcal reveal">
+          <p class="eyebrow eyebrow--hcal">Talks</p>
+          <h2 id="talks-title">Presenting HGCAL</h2>
+          <ul class="news">
+            <li><time datetime="2026-09">Sep 2026</time><div>Invited colloquium at Mississippi State University, Starkville: “Building the CMS High Granularity Calorimeter for the High-Luminosity LHC.”</div></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="hardware-join-title">
+      <div class="container">
+        <div class="callout reveal">
+          <h2 id="hardware-join-title">Work on the detector with us</h2>
+          <p>Undergraduates in my lab test real detector hardware for CMS, and graduate students in the group analyze CMS data. If you would like to join us, here is how to get started.</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="join.html">How to join the lab</a>
+            <a class="btn" href="research.html">Our research</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div>
+        <p class="site-footer__name">Emanuele Usai</p>
+        <p>Assistant Professor of Physics</p>
+        <p>Department of Physics and Astronomy, The University of Alabama</p>
+        <p>321-A Gallalee Hall, Tuscaloosa, AL · <a href="mailto:eusai@ua.edu">eusai@ua.edu</a></p>
+      </div>
+      <ul class="site-footer__links">
+        <li><a href="https://inspirehep.net/authors/1188733">INSPIRE</a></li>
+        <li><a href="https://github.com/emanueleusai">GitHub</a></li>
+        <li><a href="https://www.linkedin.com/in/emanueleusai/">LinkedIn</a></li>
+        <li><a href="https://physics.ua.edu/people/emanuele-usai/">UA profile</a></li>
+      </ul>
+    </div>
+    <p class="site-footer__small">© <span data-year>2026</span> Emanuele Usai. The background is a CMS collision event rendered live in your browser.</p>
+  </footer>
+</body>
+</html>
