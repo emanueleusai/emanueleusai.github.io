@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CV · Emanuele Usai</title>
+  <meta name="description" content="CV of Emanuele Usai, Assistant Professor of Physics at The University of Alabama: appointments, education, CMS leadership roles, funding, honors and service.">
+  <link rel="canonical" href="https://emanueleusai.com/cv.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Emanuele Usai">
+  <meta property="og:title" content="CV · Emanuele Usai">
+  <meta property="og:description" content="CV of Emanuele Usai, Assistant Professor of Physics at The University of Alabama: appointments, education, CMS leadership roles, funding, honors and service.">
+  <meta property="og:url" content="https://emanueleusai.com/cv.html">
+  <meta property="og:image" content="https://emanueleusai.com/assets/img/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#04060b">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="assets/js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="scene-fallback" aria-hidden="true"></div>
+  <div class="scene-veil" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img class="brand__mark" src="assets/img/mark.svg" alt="" width="28" height="28">
+      <span class="brand__text">Emanuele Usai<span class="brand__sub">Particle physics · UA</span></span>
+    </a>
+    <nav class="nav" aria-label="Main" data-open="false">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-list">
+        <span class="visually-hidden">Menu</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <ul class="nav__list" id="nav-list">
+        <li><a class="nav__link" href="research.html">Research</a></li>
+        <li><a class="nav__link" href="hardware.html">Hardware</a></li>
+        <li><a class="nav__link" href="teaching.html">Teaching</a></li>
+        <li><a class="nav__link" href="publications.html">Publications</a></li>
+        <li><a class="nav__link" href="cv.html">CV</a></li>
+        <li><a class="nav__link nav__link--cta" href="join.html">Join the lab</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1" data-view="cv" data-dim="high">
+    <section class="hero hero--short" aria-labelledby="cv-title">
+      <p class="eyebrow">Curriculum vitae</p>
+      <h1 id="cv-title">CV</h1>
+      <p class="hero__lead">I am an experimental particle physicist on the CMS experiment at CERN’s Large Hadron Collider, and Assistant Professor of Physics at The University of Alabama since 2022.</p>
+      <p class="hero__meta">Updated October 2026</p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="mailto:eusai@ua.edu">Email me</a>
+        <a class="btn" href="publications.html">Publications</a>
+      </div>
+      <nav class="hero__actions" aria-label="On this page">
+        <ul class="tags">
+          <li><a class="tag" href="#appointments">Appointments</a></li>
+          <li><a class="tag" href="#education">Education</a></li>
+          <li><a class="tag" href="#leadership">Leadership</a></li>
+          <li><a class="tag" href="#funding">Funding</a></li>
+          <li><a class="tag" href="#honors">Honors</a></li>
+          <li><a class="tag" href="#publications">Papers and talks</a></li>
+          <li><a class="tag" href="#teaching">Teaching and mentoring</a></li>
+          <li><a class="tag" href="#service">Service</a></li>
+          <li><a class="tag" href="#skills">Skills</a></li>
+        </ul>
+      </nav>
+    </section>
+
+    <!-- Career -->
+    <div class="section">
+      <div class="container">
+        <section class="panel panel--accent" id="appointments" aria-labelledby="appointments-title">
+          <p class="eyebrow">Career</p>
+          <h2 id="appointments-title">Appointments</h2>
+          <ol class="timeline">
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2022-08">Aug 2022</time> – present</div>
+              <div>
+                <p class="timeline__title">Assistant Professor of Physics</p>
+                <p class="timeline__place">Department of Physics and Astronomy, The University of Alabama, Tuscaloosa, AL, USA</p>
+                <div class="timeline__body">
+                  <ul>
+                    <li>Set up the UA CMS HGCAL laboratory in 2024 and manage it. The lab is responsible for the quality control of about 10,000 hexagonal readout boards (hexaboards) for the CMS High Granularity Calorimeter (HGCAL), part of the detector upgrade for the High-Luminosity LHC.</li>
+                    <li>Analysis of CMS data: measurements of quantum observables in final states with top quarks and vector bosons, searches for new physics with boosted top quarks, and artificial intelligence for particle reconstruction and event identification.</li>
+                    <li>Set up a high-performance computing cluster at UA dedicated to CMS data analysis and machine learning, in service since May 2024.</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2018-02">Feb 2018</time> – <time datetime="2022-08">Aug 2022</time></div>
+              <div>
+                <p class="timeline__title">Postdoctoral Research Associate</p>
+                <p class="timeline__place">Brown University, Providence, RI, USA</p>
+                <div class="timeline__body">
+                  <ul>
+                    <li>Search for four-top-quark production in the single-lepton final state and its statistical combination with other final states, using the complete LHC Run 2 data set, with a focus on machine learning for event identification.</li>
+                    <li>End-to-end deep learning for particle and event identification with convolutional and graph neural networks, in collaboration with a Google Research team. Produced CMS Open Data sets with low-level detector information for machine learning, and collaborated beyond experimental particle physics, for example applying deep learning to strong gravitational lensing images that probe dark matter substructure.</li>
+                    <li>Detector upgrades: assembly of silicon sensor modules for the CMS Outer Tracker, with work on robotic automation at the Brown and Fermilab assembly sites, and reconstruction performance studies for the HGCAL Technical Design Report.</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2013-02">Feb 2013</time> – <time datetime="2017-08">Aug 2017</time></div>
+              <div>
+                <p class="timeline__title">Junior Researcher</p>
+                <p class="timeline__place">Institute for Experimental Physics, University of Hamburg, DESY campus, Hamburg, Germany</p>
+                <div class="timeline__body">
+                  <ul>
+                    <li>Search for heavy resonances decaying to vector-like quarks (hypothetical heavy quarks, such as partners of the top quark) in the all-hadronic channel at √<i>s</i> = 13&nbsp;TeV, including the optimization of high-level trigger algorithms that use jet substructure.</li>
+                    <li>Search for tt̄ resonances, new heavy particles decaying to a top quark and its antiquark, at √<i>s</i> = 8&nbsp;TeV, and commissioning of top tagging and of b tagging in boosted top jets.</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2011-06">Jun 2011</time> – <time datetime="2012-12">Dec 2012</time></div>
+              <div>
+                <p class="timeline__title">Research Intern</p>
+                <p class="timeline__place">INFN Torino (Italian National Institute for Nuclear Physics), Turin, Italy</p>
+                <div class="timeline__body">
+                  <ul>
+                    <li>Measurement of the production cross-section ratios of the χ<sub>c2</sub> and χ<sub>c1</sub> states, and of the χ<sub>b2</sub> and χ<sub>b1</sub> states, with CMS.</li>
+                    <li>Dark current and temperature monitoring for the avalanche photodiodes of the CMS electromagnetic calorimeter (ECAL), and studies of electrons knocked out by cosmic muons in the CMS detector.</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="panel panel--accent reveal" id="education" aria-labelledby="education-title">
+          <p class="eyebrow">Career</p>
+          <h2 id="education-title">Education</h2>
+          <ol class="timeline cv-degrees">
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2013-02">2013</time> – <time datetime="2017-12">2017</time></div>
+              <div>
+                <p class="timeline__title">Doctorate of Science in Physics</p>
+                <p class="timeline__place">University of Hamburg, Germany</p>
+                <div class="timeline__body">
+                  <dl class="facts">
+                    <dt>Grade</dt>
+                    <dd>Summa cum laude (with highest honors), the highest grade possible, awarded after an in-depth review of the dissertation that includes an external, independent panel</dd>
+                    <dt>Thesis</dt>
+                    <dd><a href="https://inspirehep.net/literature/1644265">Searches for heavy resonances in all-jet final states with top quarks using jet substructure techniques with the CMS Experiment</a></dd>
+                    <dt>Advisor</dt>
+                    <dd>Prof. Alexander Schmidt (RWTH Aachen)</dd>
+                  </dl>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2009-10">2009</time> – <time datetime="2011-12">2011</time></div>
+              <div>
+                <p class="timeline__title">Master’s Degree in High Energy Physics</p>
+                <p class="timeline__place">University of Turin, Italy</p>
+                <div class="timeline__body">
+                  <dl class="facts">
+                    <dt>Grade</dt>
+                    <dd>110/110 cum laude, with honorable mention (110 is the maximum on the Italian scale)</dd>
+                    <dt>Thesis</dt>
+                    <dd>Measurement of the ratio σ(pp&nbsp;→&nbsp;χ<sub>c2</sub>)&thinsp;/&thinsp;σ(pp&nbsp;→&nbsp;χ<sub>c1</sub>) with the CMS detector at LHC</dd>
+                    <dt>Advisor</dt>
+                    <dd>Prof. Stefano Argirò</dd>
+                    <dt>Erasmus</dt>
+                    <dd>Exchange student at the University of Helsinki, Finland</dd>
+                  </dl>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2006-10">2006</time> – <time datetime="2009-10">2009</time></div>
+              <div>
+                <p class="timeline__title">Bachelor’s Degree in Physics</p>
+                <p class="timeline__place">University of Turin, Italy</p>
+                <div class="timeline__body">
+                  <dl class="facts">
+                    <dt>Grade</dt>
+                    <dd>110/110 cum laude</dd>
+                    <dt>Thesis</dt>
+                    <dd>Preparation for data taking of the Electromagnetic Calorimeter of CMS</dd>
+                  </dl>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
+      </div>
+    </div>
+
+    <!-- Research -->
+    <div class="section">
+      <div class="container">
+        <section class="panel panel--ecal reveal" id="leadership" aria-labelledby="leadership-title">
+          <p class="eyebrow eyebrow--ecal">Research</p>
+          <h2 id="leadership-title">Leadership in CMS</h2>
+          <p>The CMS collaboration is organized in physics and performance groups, with conveners and managers at several levels. I have held four of these roles.</p>
+          <ol class="timeline">
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2026-08">Aug 2026</time> – <time datetime="2028-08">Aug 2028</time></div>
+              <div>
+                <p class="timeline__title">Level 3 Convener, tt̄&nbsp;+&nbsp;X subgroup</p>
+                <p class="timeline__place">Top Quark Physics group</p>
+                <div class="timeline__body">
+                  <p>The subgroup studies collisions in which a top quark and its antiquark are produced together with other particles. I follow about 20 analyses and organize the biweekly meetings.</p>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2021-09">Sep 2021</time> – <time datetime="2023-08">Aug 2023</time></div>
+              <div>
+                <p class="timeline__title">Level 2 Manager, Data Quality Monitoring and Data Certification</p>
+                <p class="timeline__place">Physics Performance and Dataset group</p>
+                <div class="timeline__body">
+                  <p>Responsible for the quality and certification of the data that CMS delivers to more than 3,000 physicists. Implemented machine-learning-based data certification to reduce the human input the process needs.</p>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2020-01">Jan 2020</time> – <time datetime="2021-08">Aug 2021</time></div>
+              <div>
+                <p class="timeline__title">Level 3 Manager, “Very Heavy Fermions” analysis teams</p>
+                <p class="timeline__place">Beyond Two Generations group</p>
+                <div class="timeline__body">
+                  <p>Coordinated seven analysis teams, each working toward its own journal publication: reviewing analyses and documentation, advising analyzers and upper management, and chairing regular meetings.</p>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2019-01">Jan 2019</time> – <time datetime="2020-01">Jan 2020</time></div>
+              <div>
+                <p class="timeline__title">Level 3 Manager, “Future New Physics” analysis teams</p>
+                <p class="timeline__place">Upgrade Physics Studies group</p>
+                <div class="timeline__body">
+                  <p>Managed five analysis teams.</p>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="panel panel--ecal reveal" id="funding" aria-labelledby="funding-title">
+          <p class="eyebrow eyebrow--ecal">Research</p>
+          <h2 id="funding-title">Funding</h2>
+          <ol class="timeline">
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2023-05">May 2023</time> – <time datetime="2029-03">Mar 2029</time></div>
+              <div>
+                <p class="timeline__title">Research in Elementary Particle Physics (Energy Frontier)</p>
+                <p class="timeline__place">U.S. Department of Energy · Co-PI</p>
+                <div class="timeline__body">
+                  <p>Awarded for May 2023 to April 2026, and renewed for April 2026 to March 2029.</p>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2024-08">Aug 2024</time> – <time datetime="2026-08">Aug 2026</time></div>
+              <div>
+                <p class="timeline__title">High Luminosity (HL) LHC CMS Detector Upgrade Project Calorimeter Endcap</p>
+                <p class="timeline__place">Fermi National Accelerator Laboratory (Fermilab) · Co-PI</p>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2024-02">Feb 2024</time> – <time datetime="2025-02">Feb 2025</time></div>
+              <div>
+                <p class="timeline__title">A Data-Agnostic, Continuous Machine Learning Framework for Application in High Energy Physics and Beyond</p>
+                <p class="timeline__place">U.S. Department of Energy, Small Business Innovation Research and Small Business Technology Transfer programs (SBIR/STTR), with Cerium Labs · Co-PI</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="panel panel--ecal reveal" id="honors" aria-labelledby="honors-title">
+          <p class="eyebrow eyebrow--ecal">Research</p>
+          <h2 id="honors-title">Honors</h2>
+          <ol class="timeline">
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2020">2020</time>, <time datetime="2021">2021</time></div>
+              <div>
+                <p class="timeline__title">LPC Distinguished Researcher</p>
+                <p class="timeline__place">LHC Physics Center (LPC), Fermi National Accelerator Laboratory</p>
+                <div class="timeline__body">
+                  <p>Competitively awarded by Fermilab, in two consecutive years. The award includes salary support and a travel award.</p>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2017">2017</time></div>
+              <div>
+                <p class="timeline__title">Summa cum laude</p>
+                <p class="timeline__place">Doctorate, University of Hamburg</p>
+                <div class="timeline__body">
+                  <p>The highest grade possible for a doctorate.</p>
+                </div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2011">2011</time></div>
+              <div>
+                <p class="timeline__title">110/110 cum laude, with honorable mention</p>
+                <p class="timeline__place">Master’s degree, University of Turin</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="panel panel--ecal reveal" id="publications" aria-labelledby="publications-title">
+          <p class="eyebrow eyebrow--ecal">Research</p>
+          <h2 id="publications-title">Publications and talks</h2>
+          <div class="stats cv-stats">
+            <div class="stat"><span class="stat__value">1,227</span><span class="stat__label">peer-reviewed papers co‑signed</span></div>
+            <div class="stat"><span class="stat__value"><span class="visually-hidden">more than </span>122,000<span aria-hidden="true">+</span></span><span class="stat__label">citations</span></div>
+            <div class="stat"><span class="stat__value">17</span><span class="stat__label">talks at international conferences and invited colloquia</span></div>
+          </div>
+          <p>Paper and citation counts are from INSPIRE, as of October 2026. I made a major contribution to 11 papers, from charmonium production (2012) to the evidence for four-top-quark production (2023). Five of my talks were plenary, at meetings including TOP, BOOST and the APS Division of Particles and Fields, and I have given invited colloquia at the University of Minnesota and Mississippi State University.</p>
+          <ul class="tags">
+            <li><a class="tag" href="publications.html#selected">Selected papers</a></li>
+            <li><a class="tag" href="publications.html#talks">Talks</a></li>
+            <li><a class="tag" href="https://inspirehep.net/authors/1188733">INSPIRE profile</a></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+
+    <!-- Teaching and service -->
+    <div class="section">
+      <div class="container">
+        <section class="panel panel--hcal reveal" id="teaching" aria-labelledby="teaching-title">
+          <p class="eyebrow eyebrow--hcal">Teaching and service</p>
+          <h2 id="teaching-title">Teaching and mentoring</h2>
+          <h3>Teaching at The University of Alabama</h3>
+          <dl class="facts">
+            <dt>Undergraduate</dt>
+            <dd>Introduction to Physics with Calculus I (PH105), five semesters since 2023 with about 100 students each, including an honors section in Spring 2023; Introduction to Physics with Calculus II (PH106); Introduction to Modern Physics (PH253); Intermediate Classical Mechanics (PH302)</dd>
+            <dt>Graduate</dt>
+            <dd>Graduate Physics Seminar (PH597) and Research Techniques (PH590); Research (PH598) for the students in my group</dd>
+            <dt>Assessment</dt>
+            <dd>Peer teaching observations every year since 2023, and a Student Learning Outcomes assessment for each course</dd>
+            <dt>Outreach</dt>
+            <dd>Co-administrator of the Machine Learning for Science (since 2021) and HumanAI (since 2024) organizations in Google Summer of Code; facilitator and instructor at CMS training schools at the Fermilab LPC; co-organizer of machine learning hackathons; organizer and exhibitor at a public science fair; lectures for high school students</dd>
+          </dl>
+          <p><a class="link-arrow" href="teaching.html">Courses and outreach</a></p>
+
+          <h3>Mentoring</h3>
+          <dl class="facts">
+            <dt>Postdoc</dt>
+            <dd>One postdoctoral researcher, since February 2024</dd>
+            <dt>Graduate</dt>
+            <dd>Main advisor of three graduate students (since 2024 and 2026); co-supervised two graduate research projects (2023–2025)</dd>
+            <dt>Undergraduate</dt>
+            <dd>Five undergraduate researchers since 2024, testing and inspecting HGCAL hexaboards</dd>
+            <dt>Recognition</dt>
+            <dd>Nathan Nguyen, an undergraduate researcher in my lab from 2024 to 2026 and now a graduate student in the group, received the 2024 US CMS HL‑LHC Detector Upgrade Essential Contribution Award and the 2026 Randall Outstanding Undergraduate Research Award. Students have presented talks and posters at APS meetings (2025, 2026) and SESAPS (2024, 2025).</dd>
+            <dt>Committees</dt>
+            <dd>Chair of two graduate preliminary examination committees (2025) and member of four (2023–2024); member of two yearly-update committees (2025)</dd>
+          </dl>
+          <p><a class="link-arrow" href="join.html#group">Meet the group</a></p>
+        </section>
+
+        <section class="panel panel--hcal reveal" id="service" aria-labelledby="service-title">
+          <p class="eyebrow eyebrow--hcal">Teaching and service</p>
+          <h2 id="service-title">Service</h2>
+
+          <h3>Collaboration committees</h3>
+          <ul>
+            <li>CMS Young Scientist Committee, member since 2015</li>
+            <li>CMS Career Committee, member since 2020</li>
+            <li>Fermilab LPC Event Committee, member since 2020</li>
+          </ul>
+
+          <h3>Peer review</h3>
+          <ul>
+            <li>National Science Foundation (MPS/PHY), proposal reviewer, 2026</li>
+            <li><i>Physical Review D</i>, referee, 2026</li>
+            <li>Machine Learning and the Physical Sciences workshop at NeurIPS, paper reviewer, 2021–2026</li>
+            <li>Synergy of Scientific and Machine Learning Modeling workshop at ICML, paper reviewer, 2023</li>
+            <li>MDPI journals <i>Symmetry</i> and <i>Universe</i>, reviewer, 2024–2025</li>
+            <li>CMS Collaboration, internal reviewer of papers on top quark physics and on searches for physics beyond the standard model, including an Analysis Review Committee in 2026</li>
+          </ul>
+
+          <h3>Department and university</h3>
+          <ul>
+            <li>Graduate Recruitment Committee, 2025–2027</li>
+            <li>Departmental Advisory Committee, 2024–2026</li>
+            <li>Graduate Council Fellowship nominations review committee, 2022, 2023 and 2024</li>
+            <li>College of Arts and Sciences diversity postdoctoral position committee, experimental particle physics, 2023</li>
+            <li>Judge at the Undergraduate Research and Creative Activity (URCA) Conference, 2023, 2024 and 2025</li>
+          </ul>
+
+          <h3>Student recruitment</h3>
+          <ul>
+            <li>Graduate recruitment table for the department at SESAPS, the Southeastern Section of the American Physical Society, 2023 and 2025</li>
+            <li>Physics booth at the BCAS Open Day, 2026</li>
+            <li>Faculty Research Showcase, recruiting undergraduate researchers, 2023 and 2024</li>
+          </ul>
+        </section>
+
+        <section class="panel panel--hcal reveal" id="development" aria-labelledby="development-title">
+          <p class="eyebrow eyebrow--hcal">Teaching and service</p>
+          <h2 id="development-title">Professional development and memberships</h2>
+          <ol class="timeline">
+            <li class="timeline__item">
+              <div class="timeline__date">Since <time datetime="2022">2022</time></div>
+              <div>
+                <p class="timeline__title">Member, American Physical Society (APS)</p>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2023">2023</time> – <time datetime="2024">2024</time></div>
+              <div>
+                <p class="timeline__title">Bauer Grant Writing Workshop</p>
+                <p class="timeline__place">College of Arts and Sciences, The University of Alabama</p>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2023-06">Jun 2023</time></div>
+              <div>
+                <p class="timeline__title">Faculty Teaching Institute</p>
+                <p class="timeline__place">American Association of Physics Teachers (AAPT), Washington, DC</p>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <div class="timeline__date"><time datetime="2022">2022</time></div>
+              <div>
+                <p class="timeline__title">ALI Workshop</p>
+                <p class="timeline__place">College of Arts and Sciences, The University of Alabama</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="section">
+      <div class="container">
+        <section class="panel reveal" id="skills" aria-labelledby="skills-title">
+          <p class="eyebrow">Toolkit</p>
+          <h2 id="skills-title">Skills</h2>
+          <dl class="facts">
+            <dt>Computing</dt>
+            <dd>
+              <ul class="tags">
+                <li><span class="tag">C/C++</span></li>
+                <li><span class="tag">Python</span></li>
+                <li><span class="tag">ROOT and PyROOT</span></li>
+                <li><span class="tag">Unix</span></li>
+                <li><span class="tag">GitHub</span></li>
+                <li><span class="tag">Docker</span></li>
+                <li><span class="tag">GRID computing</span></li>
+                <li><span class="tag">System administration</span></li>
+                <li><span class="tag">OpenGL</span></li>
+              </ul>
+            </dd>
+            <dt>Data science</dt>
+            <dd>
+              <ul class="tags">
+                <li><span class="tag">PyTorch</span></li>
+                <li><span class="tag">Keras</span></li>
+                <li><span class="tag">TensorFlow</span></li>
+                <li><span class="tag">scikit-learn</span></li>
+                <li><span class="tag">NumPy</span></li>
+                <li><span class="tag">GPU/TPU computing</span></li>
+                <li><span class="tag">SQL</span></li>
+                <li><span class="tag">Apache Spark</span></li>
+              </ul>
+            </dd>
+            <dt>Languages</dt>
+            <dd>
+              <ul class="tags">
+                <li><span class="tag">Italian · native</span></li>
+                <li><span class="tag">English · fluent</span></li>
+                <li><span class="tag">French · basic</span></li>
+                <li><span class="tag">German · basic</span></li>
+              </ul>
+            </dd>
+          </dl>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div>
+        <p class="site-footer__name">Emanuele Usai</p>
+        <p>Assistant Professor of Physics</p>
+        <p>Department of Physics and Astronomy, The University of Alabama</p>
+        <p>321-A Gallalee Hall, Tuscaloosa, AL · <a href="mailto:eusai@ua.edu">eusai@ua.edu</a></p>
+      </div>
+      <ul class="site-footer__links">
+        <li><a href="https://inspirehep.net/authors/1188733">INSPIRE</a></li>
+        <li><a href="https://github.com/emanueleusai">GitHub</a></li>
+        <li><a href="https://www.linkedin.com/in/emanueleusai/">LinkedIn</a></li>
+        <li><a href="https://physics.ua.edu/people/emanuele-usai/">UA profile</a></li>
+      </ul>
+    </div>
+    <p class="site-footer__small">© <span data-year>2026</span> Emanuele Usai. The background is a CMS collision event rendered live in your browser. <button class="scene-toggle" type="button" aria-pressed="false" hidden>Pause animation</button></p>
+  </footer>
+</body>
+</html>

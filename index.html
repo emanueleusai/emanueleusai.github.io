@@ -1,64 +1,249 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" class="no-js">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prof. Emanuele Usai</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emanuele Usai · Experimental particle physicist</title>
+  <meta name="description" content="Emanuele Usai, Assistant Professor of Physics at The University of Alabama, studies the top quark with CMS at CERN and builds hardware for the CMS upgrade.">
+  <link rel="canonical" href="https://emanueleusai.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Emanuele Usai">
+  <meta property="og:title" content="Emanuele Usai · Experimental particle physicist">
+  <meta property="og:description" content="Emanuele Usai, Assistant Professor of Physics at The University of Alabama, studies the top quark with CMS at CERN and builds hardware for the CMS upgrade.">
+  <meta property="og:url" content="https://emanueleusai.com/">
+  <meta property="og:image" content="https://emanueleusai.com/assets/img/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#04060b">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="assets/js/main.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Emanuele Usai",
+    "givenName": "Emanuele",
+    "familyName": "Usai",
+    "jobTitle": "Assistant Professor of Physics",
+    "worksFor": {
+      "@type": "CollegeOrUniversity",
+      "name": "The University of Alabama",
+      "department": {
+        "@type": "Organization",
+        "name": "Department of Physics and Astronomy",
+        "url": "https://physics.ua.edu/"
+      }
+    },
+    "affiliation": {
+      "@type": "CollegeOrUniversity",
+      "name": "The University of Alabama"
+    },
+    "email": "mailto:eusai@ua.edu",
+    "image": "https://emanueleusai.com/assets/img/headshot-800.jpg",
+    "url": "https://emanueleusai.com/",
+    "sameAs": [
+      "https://inspirehep.net/authors/1188733",
+      "https://github.com/emanueleusai",
+      "https://www.linkedin.com/in/emanueleusai/",
+      "https://physics.ua.edu/people/emanuele-usai/"
+    ],
+    "alumniOf": [
+      {
+        "@type": "CollegeOrUniversity",
+        "name": "University of Hamburg"
+      },
+      {
+        "@type": "CollegeOrUniversity",
+        "name": "University of Turin"
+      }
+    ],
+    "knowsAbout": [
+      "particle physics",
+      "top quark",
+      "CMS experiment",
+      "machine learning",
+      "calorimetry"
+    ]
+  }
+  </script>
 </head>
 <body>
-  <div class="content">
-<!--     <h1 class="bottom-three">Prof. Emanuele Usai</h1>
-    <h1 class="bottom-three">Experimental Particle Physicist &#8212 Professor of Physics</h1>
-    <h1 class="bottom-three">Researching high-energy collisions and detector design at the frontiers of physics.</h1>
-    <h1 class="bottom-three"><a href="https://www.linkedin.com/in/emanueleusai/">&rarr; Linkedin</a></h1>
-    <h1 class="bottom-three"><a href="https://github.com/emanueleusai">&rarr; Github</a></h1>
-    <h1 class="bottom-three"><a href="https://inspirehep.net/authors/1188733">&rarr; Publications</a></h1>
-    <h1 class="bottom-three"><a href="http://eusai.people.ua.edu/">&rarr; at the University of Alabama</a></h1> -->
-    <h1>Prof. Emanuele Usai</h1>
-    <br>
-    <h1 class="bottom-three">Experimental Particle Physicist &#8212 Professor of Physics</h1>
-    <h1 class="bottom-three">Researching high-energy collisions and detector design at the frontiers of physics.</h1>
-    <h1 class="bottom-three"><a href="https://www.linkedin.com/in/emanueleusai/">&rarr; Linkedin</a></h1>
-    <h1 class="bottom-three"><a href="https://github.com/emanueleusai">&rarr; Github</a></h1>
-    <h1 class="bottom-three"><a href="https://inspirehep.net/authors/1188733">&rarr; Publications</a></h1>
-    <h1 class="bottom-three"><a href="http://eusai.people.ua.edu/">&rarr; at the University of Alabama</a></h1> 
+  <a class="skip-link" href="#main">Skip to content</a>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="scene-fallback" aria-hidden="true"></div>
+  <div class="scene-veil" aria-hidden="true"></div>
 
-  </div>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img class="brand__mark" src="assets/img/mark.svg" alt="" width="28" height="28">
+      <span class="brand__text">Emanuele Usai<span class="brand__sub">Particle physics · UA</span></span>
+    </a>
+    <nav class="nav" aria-label="Main" data-open="false">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-list">
+        <span class="visually-hidden">Menu</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <ul class="nav__list" id="nav-list">
+        <li><a class="nav__link" href="research.html">Research</a></li>
+        <li><a class="nav__link" href="hardware.html">Hardware</a></li>
+        <li><a class="nav__link" href="teaching.html">Teaching</a></li>
+        <li><a class="nav__link" href="publications.html">Publications</a></li>
+        <li><a class="nav__link" href="cv.html">CV</a></li>
+        <li><a class="nav__link nav__link--cta" href="join.html">Join the lab</a></li>
+      </ul>
+    </nav>
+  </header>
 
-  <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-  }
-}
-</script>
+  <main id="main" tabindex="-1" data-view="home">
+    <div class="container">
+      <section class="hero hero--home" aria-labelledby="hero-title">
+        <img class="hero__portrait" src="assets/img/headshot-400.webp" alt="Portrait of Emanuele Usai" width="112" height="112" loading="eager" decoding="async" fetchpriority="high">
+        <p class="eyebrow">Experimental particle physics&nbsp;· CMS&nbsp;at&nbsp;CERN</p>
+        <h1 id="hero-title">Emanuele Usai</h1>
+        <p class="hero__meta">Assistant Professor of Physics · The&nbsp;University&nbsp;of&nbsp;Alabama</p>
+        <p class="hero__lead">I use the top quark, the heaviest known elementary particle, to search for new physics at CERN’s Large Hadron Collider. My group also helps build new detector hardware for the upgrade of the CMS experiment and develops AI methods for particle physics.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="join.html">Join the lab</a>
+          <a class="btn" href="research.html">Explore my research</a>
+        </div>
+        <a class="scroll-cue" href="#at-a-glance">Scroll<span class="visually-hidden"> to the overview</span></a>
+      </section>
 
-  <canvas id="three-canvas"></canvas>
+      <section class="section reveal" id="at-a-glance" aria-labelledby="glance-title">
+        <h2 class="visually-hidden" id="glance-title">At a glance</h2>
+        <div class="stats stats--home">
+          <div class="stat"><span class="stat__value">1,227</span><span class="stat__label">peer-reviewed papers co-signed</span></div>
+          <div class="stat"><span class="stat__value"><span class="visually-hidden">more than </span>122,000<span aria-hidden="true">+</span></span><span class="stat__label">citations</span></div>
+          <div class="stat"><span class="stat__value"><span aria-hidden="true">~</span><span class="visually-hidden">about </span>10,000</span><span class="stat__label">hexaboards to quality-control in our HGCAL lab</span></div>
+          <div class="stat"><span class="stat__value"><span aria-hidden="true">~</span><span class="visually-hidden">about </span>20</span><span class="stat__label">CMS analyses I follow as a top-quark physics convener</span></div>
+        </div>
+        <p class="stats-note muted"><small>Paper and citation counts from <a href="https://inspirehep.net/authors/1188733">INSPIRE</a>, as of October 2026. CMS papers list the whole collaboration as authors; the ones I contributed to most are on the <a href="publications.html">publications page</a>.</small></p>
+      </section>
 
-  <!-- Shaders -->
-  <script id="vertexShader" type="x-shader/x-vertex">
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  </script>
+      <section class="section reveal" aria-labelledby="work-title">
+        <h2 id="work-title">What I work on</h2>
+        <div class="grid grid-2">
+          <a class="card card--track" href="research.html" aria-labelledby="card-research-title" aria-describedby="card-research-text">
+            <div class="card__media"><img src="assets/img/group-cluster-sm.webp" srcset="assets/img/group-cluster-sm.webp 800w, assets/img/group-cluster-lg.webp 1448w" sizes="(max-width: 640px) calc(100vw - 32px), 370px" width="800" height="600" alt="" loading="lazy" decoding="async"></div>
+            <p class="card__kicker">Research</p>
+            <h3 class="card__title" id="card-research-title">The top quark as a tool for discovery</h3>
+            <p class="card__text" id="card-research-text">I search for new particles in collisions that produce top quarks, measure quantum properties of top quarks and bosons, and use AI to reconstruct collisions more accurately.</p>
+            <span class="card__more link-arrow">Research</span>
+          </a>
+          <a class="card card--ecal" href="hardware.html" aria-labelledby="card-hardware-title" aria-describedby="card-hardware-text">
+            <div class="card__media"><img src="assets/img/visual-inspection-sm.webp" srcset="assets/img/visual-inspection-sm.webp 800w, assets/img/visual-inspection-lg.webp 1600w" sizes="(max-width: 640px) calc(100vw - 32px), 370px" width="800" height="600" alt="" loading="lazy" decoding="async"></div>
+            <p class="card__kicker">Detector hardware</p>
+            <h3 class="card__title" id="card-hardware-title">Building the CMS High Granularity Calorimeter</h3>
+            <p class="card__text" id="card-hardware-text">Our HGCAL lab at UA is in charge of quality control for about 10,000 hexagonal readout boards, or hexaboards, for the new calorimeter CMS is building for the High-Luminosity LHC.</p>
+            <span class="card__more link-arrow">Hardware</span>
+          </a>
+          <a class="card card--hcal" href="teaching.html" aria-labelledby="card-teaching-title" aria-describedby="card-teaching-text">
+            <div class="card__media"><img src="assets/img/classroom-sm.webp" srcset="assets/img/classroom-sm.webp 800w, assets/img/classroom-lg.webp 1600w" sizes="(max-width: 640px) calc(100vw - 32px), 370px" width="800" height="600" alt="" loading="lazy" decoding="async"></div>
+            <p class="card__kicker">Teaching</p>
+            <h3 class="card__title" id="card-teaching-title">Physics for a hundred students at a time</h3>
+            <p class="card__text" id="card-teaching-text">I teach calculus-based introductory physics to classes of about 100 students, as well as modern physics, classical mechanics and graduate seminars.</p>
+            <span class="card__more link-arrow">Teaching</span>
+          </a>
+          <a class="card card--track" href="join.html" aria-labelledby="card-join-title" aria-describedby="card-join-text">
+            <div class="card__media"><img src="assets/img/lab-hexaboard-team-sm.webp" srcset="assets/img/lab-hexaboard-team-sm.webp 800w, assets/img/lab-hexaboard-team-lg.webp 1448w" sizes="(max-width: 640px) calc(100vw - 32px), 370px" width="800" height="600" alt="" loading="lazy" decoding="async"></div>
+            <p class="card__kicker">Join the lab</p>
+            <h3 class="card__title" id="card-join-title">Research opportunities for students</h3>
+            <p class="card__text" id="card-join-text">Who is in the group, what students work on, and how to apply as a graduate or undergraduate student.</p>
+            <span class="card__more link-arrow">Join the lab</span>
+          </a>
+        </div>
+      </section>
 
-  <script id="fragmentShader" type="x-shader/x-fragment">
-    varying vec2 vUv;
-    uniform float time;
+      <div class="scene-gap scene-gap--legend" aria-hidden="true">
+        <p class="scene-caption"><span class="legend-item"><span class="legend-dot legend-dot--track"></span>particle tracks</span> <span class="legend-item"><span class="legend-dot legend-dot--ecal"></span>electromagnetic calorimeter</span> <span class="legend-item"><span class="legend-dot legend-dot--hcal"></span>hadronic calorimeter</span></p>
+      </div>
 
-    void main() {
-      vec2 uv = vUv - 0.5;
-      float r = length(uv);
-      float swirl = sin(10.0 * r - time * 2.0);
-      float color = smoothstep(0.5, 0.0, r) * swirl;
-      gl_FragColor = vec4(vec3(color * 0.5 + 0.5), 1.0);
-    }
-  </script>
+      <section class="section reveal" aria-labelledby="about-title">
+        <h2 id="about-title">About me</h2>
+        <div class="panel">
+          <div class="media-row about-row">
+            <div>
+              <p>I am an experimental particle physicist on the CMS experiment at CERN and have been an Assistant Professor of Physics at The University of Alabama since August 2022. I studied physics at the University of Turin and earned my PhD summa cum laude at the University of Hamburg in 2017. My doctoral research, on the DESY campus, searched for heavy new particles that decay to top quarks.</p>
+              <p>From 2018 to 2022 I was a postdoctoral researcher at Brown University, and Fermilab’s LHC Physics Center named me a Distinguished Researcher in 2020 and 2021. From 2021 to 2023 I was a Level 2 manager in CMS, responsible for data quality monitoring and data certification for the whole experiment. At UA I lead the CMS HGCAL laboratory, which I set up in 2024. Since August 2026 I have been Level 3 convener of tt̄+X, the subgroup of the CMS Top Quark Physics group that studies top-quark pairs produced together with other particles.</p>
+              <p><a class="link-arrow" href="cv.html">Full CV</a></p>
+            </div>
+            <figure class="figure about-photo">
+              <img src="assets/img/headshot-800.webp" srcset="assets/img/headshot-400.webp 400w, assets/img/headshot-800.webp 800w" sizes="200px" width="800" height="800" alt="" loading="lazy" decoding="async">
+            </figure>
+          </div>
+        </div>
+      </section>
 
-  <script type="module" src="script.js"></script>
+      <section class="section reveal" aria-labelledby="news-title">
+        <h2 id="news-title">News</h2>
+        <div class="panel">
+          <ul class="news">
+            <li><time datetime="2026-09">Sep 2026</time><div>Invited colloquium at Mississippi State University: “Building the CMS High Granularity Calorimeter for the High-Luminosity LHC.”</div></li>
+            <li><time datetime="2026-08">Aug 2026</time><div>I began a two-year term, through August 2028, as Level 3 convener of the tt̄+X subgroup in the CMS Top Quark Physics group, following about 20 analyses.</div></li>
+            <li><time datetime="2026">2026</time><div>Nathan Nguyen, an undergraduate researcher in our HGCAL lab from 2024 to 2026, received the Randall Outstanding Undergraduate Research Award.</div></li>
+            <li><time datetime="2026-05">May 2026</time><div>Nathan Nguyen and Abhipsa Acharya became graduate students in my group. Nathan studies the production of four top quarks in events with two leptons of opposite charge. Abhipsa, whose 2024–2025 research project I co-supervised, searches for pair-produced T′ quarks, hypothetical heavy partners of the top quark.</div></li>
+            <li><time datetime="2026-04">Apr 2026</time><div>Our U.S. Department of Energy grant “Research in Elementary Particle Physics (Energy Frontier),” on which I am a Co-PI, was renewed through March 2029.</div></li>
+            <li><time datetime="2025-05">May 2025</time><div>Talk at LHCP 2025, the 13th Large Hadron Collider Physics Conference: “Recent Results on Searches with Boosted Tops (CMS).”</div></li>
+            <li><time datetime="2024">2024</time><div>I set up the UA CMS HGCAL laboratory, where we quality-control hexaboards for the CMS upgrade.</div></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section reveal" aria-labelledby="recruit-title">
+        <div class="callout">
+          <h2 id="recruit-title">I’m recruiting graduate and undergraduate students</h2>
+          <p>Graduate students in my group analyze CMS data, and undergraduates inspect and test detector boards in our HGCAL lab. Students in the group have presented talks and posters at APS and SESAPS meetings.</p>
+          <p><a class="btn btn--primary" href="join.html">How to join the lab</a></p>
+        </div>
+      </section>
+
+      <section class="section reveal" id="contact" aria-labelledby="contact-title">
+        <h2 id="contact-title">Contact</h2>
+        <div class="panel">
+          <div class="grid grid-2">
+            <ul class="contact-list">
+              <li><a href="mailto:eusai@ua.edu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>eusai@ua.edu</a></li>
+              <li><span class="contact-list__static"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Office 321-A Gallalee Hall<br>Department of Physics and Astronomy<br>The University of Alabama<br>Tuscaloosa, AL</span></span></li>
+            </ul>
+            <ul class="contact-list">
+              <li><a href="https://inspirehep.net/authors/1188733"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Publications on INSPIRE</a></li>
+              <li><a href="https://github.com/emanueleusai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>GitHub</a></li>
+              <li><a href="https://www.linkedin.com/in/emanueleusai/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>LinkedIn</a></li>
+              <li><a href="https://physics.ua.edu/people/emanuele-usai/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>University of Alabama profile</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div>
+        <p class="site-footer__name">Emanuele Usai</p>
+        <p>Assistant Professor of Physics</p>
+        <p>Department of Physics and Astronomy, The University of Alabama</p>
+        <p>321-A Gallalee Hall, Tuscaloosa, AL · <a href="mailto:eusai@ua.edu">eusai@ua.edu</a></p>
+      </div>
+      <ul class="site-footer__links">
+        <li><a href="https://inspirehep.net/authors/1188733">INSPIRE</a></li>
+        <li><a href="https://github.com/emanueleusai">GitHub</a></li>
+        <li><a href="https://www.linkedin.com/in/emanueleusai/">LinkedIn</a></li>
+        <li><a href="https://physics.ua.edu/people/emanuele-usai/">UA profile</a></li>
+      </ul>
+    </div>
+    <p class="site-footer__small">© <span data-year>2026</span> Emanuele Usai. The background is a CMS collision event rendered live in your browser. <button class="scene-toggle" type="button" aria-pressed="false" hidden>Pause animation</button></p>
+  </footer>
 </body>
 </html>

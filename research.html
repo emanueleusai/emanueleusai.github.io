@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research · Emanuele Usai</title>
+  <meta name="description" content="How my group uses the top quark, the heaviest known elementary particle, to search for new physics with the CMS experiment at CERN’s LHC, with help from AI.">
+  <link rel="canonical" href="https://emanueleusai.com/research.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Emanuele Usai">
+  <meta property="og:title" content="Research · Emanuele Usai">
+  <meta property="og:description" content="How my group uses the top quark, the heaviest known elementary particle, to search for new physics with the CMS experiment at CERN’s LHC, with help from AI.">
+  <meta property="og:url" content="https://emanueleusai.com/research.html">
+  <meta property="og:image" content="https://emanueleusai.com/assets/img/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#04060b">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="assets/js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="scene-fallback" aria-hidden="true"></div>
+  <div class="scene-veil" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img class="brand__mark" src="assets/img/mark.svg" alt="" width="28" height="28">
+      <span class="brand__text">Emanuele Usai<span class="brand__sub">Particle physics · UA</span></span>
+    </a>
+    <nav class="nav" aria-label="Main" data-open="false">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-list">
+        <span class="visually-hidden">Menu</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <ul class="nav__list" id="nav-list">
+        <li><a class="nav__link" href="research.html">Research</a></li>
+        <li><a class="nav__link" href="hardware.html">Hardware</a></li>
+        <li><a class="nav__link" href="teaching.html">Teaching</a></li>
+        <li><a class="nav__link" href="publications.html">Publications</a></li>
+        <li><a class="nav__link" href="cv.html">CV</a></li>
+        <li><a class="nav__link nav__link--cta" href="join.html">Join the lab</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1" data-view="research">
+    <section class="hero hero--short">
+      <p class="eyebrow">Research</p>
+      <h1>Using the top quark to look for new physics</h1>
+      <p class="hero__lead">My group studies the top quark, the heaviest known elementary particle, with the CMS detector at CERN’s Large Hadron Collider (LHC). We search for physics beyond the Standard Model, our current theory of particles and forces, measure quantum effects such as entanglement, and develop AI tools.</p>
+      <nav class="hero__actions" aria-label="On this page">
+        <ul class="tags">
+          <li><a class="tag" href="#four-top">Four-top production</a></li>
+          <li><a class="tag" href="#boosted-tops">Boosted top quarks</a></li>
+          <li><a class="tag" href="#quantum">Quantum observables</a></li>
+          <li><a class="tag" href="#ai">AI for physics</a></li>
+          <li><a class="tag" href="#detectors">Detectors and computing</a></li>
+          <li><a class="tag" href="#leadership">Leadership</a></li>
+        </ul>
+      </nav>
+    </section>
+
+    <section class="section" id="four-top" aria-labelledby="four-top-title">
+      <div class="container">
+        <div class="panel panel--accent reveal">
+          <p class="eyebrow">01 · Top quark physics</p>
+          <h2 id="four-top-title">Four top quarks in one collision</h2>
+          <ul class="tags" aria-label="Topics">
+            <li><span class="tag">four-top production</span></li>
+            <li><span class="tag">top-Higgs coupling</span></li>
+            <li><span class="tag">machine learning</span></li>
+            <li><span class="tag">statistical combination</span></li>
+            <li><span class="tag">LHC Run 2</span></li>
+          </ul>
+          <p>At the LHC, protons collide at the highest energies ever reached in a laboratory, and the CMS detector records what comes out. The top quark is roughly as heavy as an atom of gold and is the elementary particle most strongly coupled to the Higgs boson, which makes it a natural place to look for what lies beyond the Standard Model.</p>
+          <p>It also decays in less than a trillionth of a trillionth of a second, before it has time to bind with other quarks. Its decay products therefore carry the top quark’s own properties with them, which makes it a clean probe of the Higgs boson and of possible new particles.</p>
+          <p>Producing four top quarks in a single collision is extremely rare, and how often it happens depends on the top quark’s coupling to the Higgs boson and on any new heavy particles that could take part. At Brown University I searched for this process in the single-lepton final state (one electron or muon plus many jets).</p>
+          <p>I worked on the machine-learning tools that pick these events out of far more common backgrounds, and on the statistical combination with other final states using the complete LHC Run 2 data set (recorded from 2015 to 2018). I also prepared and optimized the analysis for Run 3.</p>
+          <ul>
+            <li>I was a major contributor to the CMS paper reporting <strong>evidence for four-top-quark production</strong> (Physics Letters B, 2023), which includes this search and the combination.</li>
+            <li>A review of four-top physics at the LHC, written with F. Blekman, F. Déliot and V. Dutta (Universe, 2022).</li>
+            <li>A talk and proceedings at LHCP 2021 reporting ATLAS and CMS results on κ<sub>t</sub>, the strength of the top quark’s coupling to the Higgs boson relative to the Standard Model prediction, from measurements of top quark-antiquark pairs (tt̄) and of four top quarks.</li>
+          </ul>
+          <p>At Alabama, two graduate students in my group carry this program forward: Guillermo Fidalgo in the single-lepton final state, and Nathan Nguyen in the opposite-sign dilepton final state (two electrons or muons of opposite electric charge).</p>
+          <div class="key-papers">
+            <h3 class="key-papers__label">Key papers</h3>
+            <ul>
+              <li><a href="https://doi.org/10.1016/j.physletb.2023.138076">Evidence for four-top quark production in proton-proton collisions at &radic;s = 13 TeV</a> <span class="key-papers__meta">CMS Collaboration · Phys. Lett. B 844 (2023) 138076 · <a href="https://arxiv.org/abs/2303.03864">arXiv:2303.03864</a></span></li>
+              <li><a href="https://doi.org/10.3390/universe8120638">Four-top quark physics at the LHC</a> <span class="key-papers__meta">F. Blekman, F. Déliot, V. Dutta, E. Usai · Universe 8 (2022) 638</span></li>
+              <li>Determination of κ<sub>t</sub> from tt̄ and tt̄tt̄ <span class="key-papers__meta">E. Usai · Proceedings of the 9th Large Hadron Collider Physics Conference (LHCP 2021), 2021</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="boosted-tops" aria-labelledby="boosted-tops-title">
+      <div class="container">
+        <div class="panel panel--hcal reveal">
+          <p class="eyebrow eyebrow--hcal">02 · New heavy particles</p>
+          <h2 id="boosted-tops-title">Searching for new heavy particles with boosted top quarks</h2>
+          <ul class="tags" aria-label="Topics">
+            <li><span class="tag">boosted top quarks</span></li>
+            <li><span class="tag">jet substructure</span></li>
+            <li><span class="tag">top tagging</span></li>
+            <li><span class="tag">vector-like quarks</span></li>
+            <li><span class="tag">top-pair resonances</span></li>
+          </ul>
+          <p>Many extensions of the Standard Model predict heavy new particles that would decay into top quarks. When such a particle is much heavier than the top quark, the top quarks it produces move so fast that their decay products (in the most common decay, three quarks) merge into a single wide spray of particles: a “boosted” top-quark jet. Telling these jets apart from the far more common jets made by ordinary quarks and gluons relies on their internal structure, called jet substructure.</p>
+          <p>This was the subject of my doctoral work at the University of Hamburg, on the DESY campus. I searched for heavy particles decaying to top quark-antiquark pairs (tt̄ resonances) and to vector-like quarks, hypothetical heavy partners of the top quark that appear in many theories of why the Higgs boson is as light as it is. Along the way I commissioned top-tagging and b-tagging algorithms for boosted top jets, and optimized trigger algorithms (the real-time selection that decides which collisions CMS keeps) using jet substructure.</p>
+          <ul>
+            <li>Searches for tt̄ resonances at 8 and 13 TeV, in boosted lepton+jets and fully hadronic final states.</li>
+            <li>Searches for vector-like T quarks decaying to top quarks and Higgs bosons, and for a heavy resonance decaying to a top quark and a vector-like top quark, in all-hadronic final states using jet substructure.</li>
+            <li>An overview of experimental tools for boosted tops (plenary talk, TOP 2014) and a study of correlations among jet substructure observables.</li>
+            <li>Talks on the current state of the field: searches for new physics in top-quark final states (plenary, TOP 2023) and recent CMS results on searches with boosted tops (LHCP 2025).</li>
+          </ul>
+          <p>At Alabama, Abhipsa Acharya, a graduate student in my group, continues this line of work with a search for pair-produced T′ quarks, hypothetical heavy partners of the top quark.</p>
+          <div class="key-papers">
+            <h3 class="key-papers__label">Key papers</h3>
+            <ul>
+              <li><a href="https://doi.org/10.1007/JHEP07(2017)001">Search for tt̄ resonances in highly boosted lepton+jets and fully hadronic final states in proton-proton collisions at &radic;s = 13 TeV</a> <span class="key-papers__meta">CMS Collaboration · JHEP 07 (2017) 001 · <a href="https://arxiv.org/abs/1704.03366">arXiv:1704.03366</a></span></li>
+              <li><a href="https://doi.org/10.1007/JHEP09(2017)053">Search for a heavy resonance decaying to a top quark and a vector-like top quark at &radic;s = 13 TeV</a> <span class="key-papers__meta">CMS Collaboration · JHEP 09 (2017) 053 · <a href="https://arxiv.org/abs/1703.06352">arXiv:1703.06352</a></span></li>
+              <li><a href="https://doi.org/10.1103/PhysRevD.93.012001">Search for resonant tt̄ production in proton-proton collisions at &radic;s = 8 TeV</a> <span class="key-papers__meta">CMS Collaboration · Phys. Rev. D 93 (2016) 012001 · <a href="https://arxiv.org/abs/1506.03062">arXiv:1506.03062</a></span></li>
+              <li><a href="https://doi.org/10.1140/epjc/s10052-015-3587-2">Towards an understanding of the correlations in jet substructure</a> <span class="key-papers__meta">D. Adams et al. · Eur. Phys. J. C 75 (2015) 409 · <a href="https://arxiv.org/abs/1504.00679">arXiv:1504.00679</a></span></li>
+              <li><a href="https://doi.org/10.1007/JHEP06(2015)080">Search for vector-like T quarks decaying to top quarks and Higgs bosons in the all-hadronic channel using jet substructure</a> <span class="key-papers__meta">CMS Collaboration · JHEP 06 (2015) 080 · <a href="https://arxiv.org/abs/1503.01952">arXiv:1503.01952</a></span></li>
+              <li><a href="https://arxiv.org/abs/1501.00900">Boosted top: experimental tools overview</a> <span class="key-papers__meta">E. Usai · Proceedings of the 7th International Workshop on Top Quark Physics (TOP 2014), 2015</span></li>
+              <li><a href="https://inspirehep.net/literature/1644265">Searches for heavy resonances in all-jet final states with top quarks using jet substructure techniques with the CMS Experiment</a> <span class="key-papers__meta">Doctoral thesis, University of Hamburg, 2017</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="quantum" aria-labelledby="quantum-title">
+      <div class="container">
+        <div class="panel panel--ecal reveal">
+          <p class="eyebrow eyebrow--ecal">03 · Quantum observables</p>
+          <h2 id="quantum-title">Quantum observables at the LHC</h2>
+          <ul class="tags" aria-label="Topics">
+            <li><span class="tag">entanglement</span></li>
+            <li><span class="tag">spin correlations</span></li>
+            <li><span class="tag">top quarks</span></li>
+            <li><span class="tag">ZZ events</span></li>
+          </ul>
+          <p>When two heavy particles are produced together, their spins can be correlated, and in some cases entangled, in ways that only quantum mechanics describes. The top quark decays before its spin is disturbed, and W and Z bosons reveal their polarization through the directions of their decay products, so we can reconstruct these spin states from the particles CMS records. That lets us measure quantum observables, such as entanglement, at energies far above those of tabletop experiments.</p>
+          <p>This is a new direction for my group at Alabama, in final states with top quarks and with vector bosons (the W and Z). Our postdoctoral researcher, Axel Perraguin, is working on a measurement of entanglement in events with two Z bosons (ZZ events).</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" data-scene="research-side" aria-labelledby="ai-title">
+      <div class="scene-gap scene-gap--legend" aria-hidden="true">
+        <p class="scene-caption"><span class="legend-item">Side view:</span> <span class="legend-item"><span class="legend-dot legend-dot--ecal"></span>electromagnetic calorimeter</span> <span class="legend-item"><span class="legend-dot legend-dot--hcal"></span>hadronic calorimeter</span></p>
+      </div>
+      <div class="container" id="ai">
+        <div class="panel panel--accent reveal">
+          <p class="eyebrow">04 · Artificial intelligence</p>
+          <h2 id="ai-title">AI for particle physics</h2>
+          <ul class="tags" aria-label="Topics">
+            <li><span class="tag">end-to-end deep learning</span></li>
+            <li><span class="tag">convolutional networks</span></li>
+            <li><span class="tag">graph neural networks</span></li>
+            <li><span class="tag">CMS Open Data</span></li>
+            <li><span class="tag">data quality</span></li>
+          </ul>
+          <p>Collider analyses usually compress each collision into a short list of reconstructed objects, such as jets, electrons and muons, before any machine learning is applied. With a team at Google Research, we explored a different route: end-to-end deep learning, in which convolutional and graph neural networks learn directly from low-level detector data, the hits in the tracker and the energy deposits in the calorimeters you see in the background.</p>
+          <p>We used it to identify particles and whole collision events in both regular and boosted topologies, and extended it to top-quark mass regression. At Alabama I continue to work on improving particle reconstruction and event identification with AI.</p>
+          <p>So that others can reproduce and build on this work, I produced CMS Open Data sets for machine learning with low-level detector inputs, including tracker hits. As manager of Data Quality Monitoring and Data Certification in CMS, I worked on machine-learning-based data certification to significantly reduce the human input needed to decide which data are good for physics.</p>
+          <ul>
+            <li>End-to-end classification of boosted top-quark jets, and of quark versus gluon jets, using CMS Open Data (talks include a plenary at BOOST 2019).</li>
+            <li>Co-author of the Machine Learning in High Energy Physics Community White Paper.</li>
+            <li>Co-administrator of the Machine Learning for Science (ML4SCI) organization at Google Summer of Code since 2021, and of HumanAI since 2024. In 2021 I coordinated 19 ML4SCI projects, including quantum generative models and quantum convolutional neural networks for physics data analysis.</li>
+          </ul>
+          <div class="key-papers">
+            <h3 class="key-papers__label">Key papers</h3>
+            <ul>
+              <li><a href="https://doi.org/10.1103/PhysRevD.105.052008">End-to-end jet classification of boosted top quarks with the CMS open data</a> <span class="key-papers__meta">M. Andrews et al. · Phys. Rev. D 105 (2022) 052008</span></li>
+              <li><a href="https://doi.org/10.1016/j.nima.2020.164304">End-to-end jet classification of quarks and gluons with the CMS Open Data</a> <span class="key-papers__meta">M. Andrews et al. · Nucl. Instrum. Meth. A 977 (2020) 164304 · <a href="https://arxiv.org/abs/1902.08276">arXiv:1902.08276</a></span></li>
+              <li><a href="https://arxiv.org/abs/1910.07029">Deep learning end-to-end particle and event identification at the Large Hadron Collider with CMS Open Data</a> <span class="key-papers__meta">J. Alison et al. · APS Division of Particles and Fields meeting, 2019</span></li>
+              <li><a href="https://doi.org/10.3847/1538-4357/ab7925">Deep learning the morphology of dark matter substructure</a> <span class="key-papers__meta">S. Alexander et al. · Astrophys. J. 893 (2020) 15 · <a href="https://arxiv.org/abs/1909.07346">arXiv:1909.07346</a></span></li>
+              <li><a href="https://arxiv.org/abs/2008.12731">Decoding dark matter substructure without supervision</a> <span class="key-papers__meta">S. Alexander et al. · preprint, arXiv:2008.12731</span></li>
+              <li><a href="https://doi.org/10.1088/1742-6596/1085/2/022008">Machine Learning in High Energy Physics Community White Paper</a> <span class="key-papers__meta">K. Albertsson et al. · J. Phys. Conf. Ser. 1085 (2018) 022008 · <a href="https://arxiv.org/abs/1807.02876">arXiv:1807.02876</a></span></li>
+            </ul>
+            <h3 class="key-papers__label">Open data</h3>
+            <ul>
+              <li><a href="https://doi.org/10.7483/OPENDATA.CMS.CHC3.5KPG">Samples with full event information including tracker hits for tracking, machine learning, and top quark tagging studies</a> <span class="key-papers__meta">M. Andrews et al. · CERN Open Data Portal, 2019</span></li>
+              <li><a href="https://doi.org/10.7483/OPENDATA.CMS.OPKY.OJMJ">Simulated datasets (TTJets_Hadronic, QCD_Pt-15to3000) enriched with tracker hits in AODSIM format for 2012 collision data</a> <span class="key-papers__meta">CMS Collaboration · CERN Open Data Portal, 2019 · records <a href="https://doi.org/10.7483/OPENDATA.CMS.OPKY.OJMJ">OPKY.OJMJ</a>, <a href="https://doi.org/10.7483/OPENDATA.CMS.HUED.7R3E">HUED.7R3E</a>, <a href="https://doi.org/10.7483/OPENDATA.CMS.YWDZ.KSLK">YWDZ.KSLK</a>, <a href="https://doi.org/10.7483/OPENDATA.CMS.CWTT.8Q3E">CWTT.8Q3E</a></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="detectors" aria-labelledby="detectors-title">
+      <div class="container">
+        <div class="panel panel--hcal reveal">
+          <p class="eyebrow eyebrow--hcal">05 · Detectors and computing</p>
+          <h2 id="detectors-title">Building the detector and the computing behind it</h2>
+          <ul class="tags" aria-label="Topics">
+            <li><span class="tag">HGCAL</span></li>
+            <li><span class="tag">hexaboard quality control</span></li>
+            <li><span class="tag">Outer Tracker</span></li>
+            <li><span class="tag">high-performance computing</span></li>
+          </ul>
+          <p>Physics results are only as good as the detector and the computing behind them. In 2024 I set up the UA CMS HGCAL laboratory, where we perform quality control of about 10,000 hexagonal readout boards (hexaboards) for the High Granularity Calorimeter (HGCAL), part of the upgrade of CMS for the High-Luminosity LHC. I also set up <a href="hardware.html#computing">a high-performance computing cluster at UA</a> dedicated to CMS data analysis and machine learning, in service since May 2024.</p>
+          <p>Before coming to Alabama, I worked on robotic automation for assembling silicon sensor modules for the upgraded CMS Outer Tracker, at the Brown and Fermilab assembly sites, and on electron beam tests of those modules at DESY.</p>
+          <p><a class="link-arrow" href="hardware.html">Inside the HGCAL lab</a></p>
+          <div class="key-papers">
+            <h3 class="key-papers__label">Key reports</h3>
+            <ul>
+              <li>The Phase-2 Upgrade of the CMS Endcap Calorimeter <span class="key-papers__meta">CMS Collaboration · Technical Design Report, CERN-LHCC-2017-023, 2017</span></li>
+              <li><a href="https://doi.org/10.23731/CYRM-2019-007.585">Report from Working Group 3: Beyond the Standard Model physics at the HL-LHC and HE-LHC</a> <span class="key-papers__meta">X. C. Vidal et al. · CERN Yellow Report, vol. 7 (2019) 585–865 · <a href="https://arxiv.org/abs/1812.07831">arXiv:1812.07831</a></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="leadership" aria-labelledby="leadership-title">
+      <div class="container">
+        <div class="panel reveal">
+          <p class="eyebrow">Service to the collaboration</p>
+          <h2 id="leadership-title">Leadership in CMS</h2>
+          <p>CMS organizes its physics work into groups and subgroups, each coordinated by conveners or managers who review the analyses, run the meetings and advise the collaboration’s management. I have held four of these roles.</p>
+          <ol class="timeline">
+            <li class="timeline__item">
+              <p class="timeline__date">Aug 2026 – Aug 2028</p>
+              <div>
+                <p class="timeline__title">Level 3 convener, tt̄+X subgroup</p>
+                <p class="timeline__place">Top Quark Physics group</p>
+                <div class="timeline__body"><p>Following about 20 analyses of top quark-antiquark pairs produced together with other particles, and organizing biweekly meetings.</p></div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <p class="timeline__date">Sep 2021 – Aug 2023</p>
+              <div>
+                <p class="timeline__title">Level 2 manager, Data Quality Monitoring and Data Certification</p>
+                <p class="timeline__place">Physics Performance and Dataset group</p>
+                <div class="timeline__body"><p>Responsible for the quality and certification of CMS data, making sure that the data delivered to more than 3,000 physicists are fit for analysis. Worked on machine-learning-based certification (see <a href="#ai">AI for particle physics</a>).</p></div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <p class="timeline__date">Jan 2020 – Aug 2021</p>
+              <div>
+                <p class="timeline__title">Level 3 manager, Very Heavy Fermions</p>
+                <p class="timeline__place">Beyond Two Generations group</p>
+                <div class="timeline__body"><p>Coordinated seven analysis teams, each working on a dedicated journal publication: reviewing analyses and documentation, advising analysts on technical issues and upper management on the program, and chairing regular meetings.</p></div>
+              </div>
+            </li>
+            <li class="timeline__item">
+              <p class="timeline__date">Jan 2019 – Jan 2020</p>
+              <div>
+                <p class="timeline__title">Level 3 manager, Future New Physics</p>
+                <p class="timeline__place">Upgrade Physics Studies group</p>
+                <div class="timeline__body"><p>Managed five analysis teams.</p></div>
+              </div>
+            </li>
+          </ol>
+          <p class="muted">I also serve on the CMS Young Scientist Committee (since 2015), the CMS Career Committee and the Fermilab LPC Event Committee (both since 2020), and review CMS papers on top quark physics and searches for new physics, including service on an Analysis Review Committee in 2026.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="beyond" aria-labelledby="beyond-title">
+      <div class="container">
+        <div class="panel panel--ecal reveal">
+          <p class="eyebrow eyebrow--ecal">Interdisciplinary work</p>
+          <h2 id="beyond-title">Collaborations beyond experimental particle physics</h2>
+          <p>The tools we build for collider data travel well. Outside experimental particle physics, I have contributed to:</p>
+          <ul>
+            <li><strong>Astrophysics:</strong> deep learning applied to strong gravitational lensing images to probe the substructure of dark matter halos.</li>
+            <li><strong>Lattice gauge theory:</strong> TensorFlow and TPU (tensor processing unit) acceleration of lattice gauge theory simulations.</li>
+            <li><strong>Genomics:</strong> data analysis consulting for a gene ontology study of DNA samples from patients with epilepsy.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="callout reveal">
+          <h2>Want to work on this?</h2>
+          <p>Graduate students in my group analyze CMS data, and undergraduates test detector hardware in our HGCAL lab. See what you could work on and how to apply.</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="join.html">How to join the lab</a>
+            <a class="btn" href="publications.html">Selected publications</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div>
+        <p class="site-footer__name">Emanuele Usai</p>
+        <p>Assistant Professor of Physics</p>
+        <p>Department of Physics and Astronomy, The University of Alabama</p>
+        <p>321-A Gallalee Hall, Tuscaloosa, AL · <a href="mailto:eusai@ua.edu">eusai@ua.edu</a></p>
+      </div>
+      <ul class="site-footer__links">
+        <li><a href="https://inspirehep.net/authors/1188733">INSPIRE</a></li>
+        <li><a href="https://github.com/emanueleusai">GitHub</a></li>
+        <li><a href="https://www.linkedin.com/in/emanueleusai/">LinkedIn</a></li>
+        <li><a href="https://physics.ua.edu/people/emanuele-usai/">UA profile</a></li>
+      </ul>
+    </div>
+    <p class="site-footer__small">© <span data-year>2026</span> Emanuele Usai. The background is a CMS collision event rendered live in your browser. <button class="scene-toggle" type="button" aria-pressed="false" hidden>Pause animation</button></p>
+  </footer>
+</body>
+</html>
