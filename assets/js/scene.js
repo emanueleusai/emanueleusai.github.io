@@ -4,7 +4,9 @@
 // meters, beam along z): charged-particle tracks (yellow), ECAL energy deposits in the barrel and
 // endcaps (EB/EE, green), HCAL barrel deposits (HB, blue), two reconstructed electrons, and the ECAL
 // barrel geometry drawn as faint glass. The hardware views add a procedural HGCAL layer and module
-// from hexaboard.js, loaded on first use.
+// from hexaboard.js, loaded on first use. The research views group the event's tracks into jets
+// (a real anti-kT clustering, run here on the track data) and add an illustration, which is not
+// CMS data, of how b jets and top-quark jets are tagged.
 //
 // Contract (see SPEC.md): initScene({ canvas, reducedMotion, initialView, paused }) ->
 // { setView, replay, setPaused, dispose }. setPaused(true) stops everything that moves on its own
@@ -23,6 +25,9 @@ const COLOR = {
   ecal: '#46e27a', hcal: '#4db8ff',                 // --ecal, --hcal
   electron: '#46e27a', electronCore: '#f3fff6',
   head: '#fffaf0', flash: '#ffe9b0',
+  jets: ['#ff8a4c', '#b98cff', '#5ad1ff', '#ff6fa8'],   // jets found in the event, hardest first (site.css: --jet-1, --jet-2)
+  toyB: '#ff6b6b', toyW: ['#5ad1ff', '#b98cff'],        // illustration: the b jet and the two jets from the W
+  toyCone: '#dfe8f5', toyFlight: '#ffd9d9',
   geometry: new THREE.Color(0.498, 0.8, 1),         // ECAL barrel material in the original export (linear)
 };
 
@@ -33,7 +38,34 @@ const HIT_GROW = 0.55;            // energy deposits grow out of their inner fac
 const ELECTRON_START = 1.95;      // the two reconstructed electrons are drawn last, faster
 const ELECTRON_SPEED = 5.5;
 const REPLAY_END = 3.2;           // everything is idle after this
+const LOOP_DIP = 0.6;             // s: the dip to dark through which a view enters or loops
 const FINAL = 1e4;                // "replay finished" clock value
+
+// Jets (research views). Anti-kT with R = 0.4 on the charged-particle tracks; the jets above
+// JET_MIN_PT (GeV of track momentum) are colored and get a cone. After the replay, the tracks take
+// their jet's color in the order in which the algorithm merged them.
+const JET_R = 0.4;
+const JET_MIN_PT = 30;
+const CLUSTER_START = 0.35;       // s after the replay ends
+const CLUSTER_TIME = 2.6;         // s from the first merge to the last
+const JET_DIM = 0.3;              // brightness left to the tracks outside those jets
+const TRACKER = { r: 1.29, z: 3.17 };   // where the tracks end and the calorimeters begin (m)
+
+// Illustration for the research page (not CMS data): the jet of a fast top quark, t -> b W, W -> q q'.
+// A top quark with pT = 650 GeV; the three quarks' momenta (GeV) and their offsets from its direction
+// in (eta, phi) follow from the decay kinematics (m_t = 172.5 GeV, m_W = 80.4 GeV). The b hadron
+// flies `flight` meters before it decays, so some of the b jet's tracks start at a second vertex.
+const TOY = {
+  vertex: [0, 0, -0.036], eta: -0.2, phi: 1.13, R: 0.8, subR: 0.2, flight: 0.006,
+  quarks: [
+    { pt: 270, deta: 0.205, dphi: -0.141, b: true },
+    { pt: 236, deta: -0.066, dphi: 0.247 },
+    { pt: 155, deta: -0.257, dphi: -0.129 },
+  ],
+  decayAt: 1.25,                  // s on the illustration's clock: the b hadron decays
+  conesAt: 1.7,                   // the three cores are outlined, then the wide jet around them
+  end: 3.6,
+};
 
 const GEOMETRY_ALPHA = 0.01;      // per-face alpha of the ECAL barrel glass (as in the original export)
 const GEOMETRY_LINE_ALPHA = 0.02;
@@ -70,25 +102,48 @@ const FOG_OFF = [90, 180];
 // (measured from +z toward +x), vertical fov (deg, landscape). Layers are opacity multipliers:
 // event = tracks, electrons and vertex glow; ecal = barrel geometry; hits = EB/EE/HB deposits;
 // hgcal = the HGCAL layer; module = the single module. orbit: camera drift (rad/s); roll: event
-// angle about the beam axis (rad) and spin its speed (rad/s); shift: placement on the stage of
-// wide screens (see COLUMN); fit: aspect below which narrow screens pull back (default FIT);
-// bright: overall brightness. Hardware close-ups only: fog (0..1, see FOG), explode (the module's
-// layers apart, 0..1) and mrot (the module laid back for the exploded view, 0..1).
+// angle about the beam axis (rad) and spin its speed (rad/s); steady: the event does not roll
+// with the page scroll; shift: placement on the stage of wide screens (see COLUMN); fit: aspect
+// below which narrow screens pull back (default FIT); bright: overall brightness. from, pullOut:
+// an entrance (the camera cuts to the `from` pose, the event replays, and the camera takes pullOut
+// seconds to reach the view); loop: the entrance repeats every so many seconds. jets (0..1): the
+// tracks take their jet's color and the jet cones show. toy (0..1): the illustrated top-quark jet.
+// lift: on narrow screens, how far above the center the subject sits (fraction of the viewport
+// height), so that it shows in the gap above a section's text.
+// Hardware close-ups only: fog (0..1, see FOG), explode (the module's layers apart, 0..1) and mrot
+// (the module laid back for the exploded view, 0..1).
 // ---------------------------------------------------------------------------------------------
 const L = (event, ecal, hits, hgcal = 0, module = 0) => ({ event, ecal, hits, hgcal, module });
+const TOY_VERTEX = new THREE.Vector3().fromArray(TOY.vertex);
+const direction = (eta, phi) => new THREE.Vector3(Math.cos(phi), Math.sin(phi), Math.sinh(eta)).normalize();
 
 const VIEWS = {
+  // Home: the camera starts at the collision point and pulls out while the event replays, then
+  // drifts; every `loop` seconds it does so again.
   home: {
-    target: [0, 0.05, -0.2], dist: 17.5, polar: 1.17, azimuth: -0.78, fov: 34,
-    roll: -1.45, orbit: 0.03, spin: 0, shift: 0.87, bright: 1, layers: L(1, 0.55, 1), fit: 0.91,
+    target: [0, 0, 0], dist: 14.5, polar: 1.12, azimuth: 0.62, fov: 38,
+    roll: -0.9, orbit: 0.025, spin: 0, shift: 0.97, bright: 1, layers: L(1, 1, 1), fit: 0.91,
+    from: { dist: 0.28, polar: 1.34, azimuth: 1.4, fov: 62 }, pullOut: 3.8, loop: 15,
   },
+  // Research: the two jets found in the event, then (as sections scroll past) the illustration of
+  // b tagging at the collision point and of top tagging, and the side view of the real event.
   research: {
-    target: [0, 0, 0], dist: 15, polar: Math.PI / 2, azimuth: 0, fov: 26,
-    roll: -1.5, orbit: 0, spin: 0.02, shift: 0.85, bright: 1, layers: L(1, 1.4, 0.9), fit: 0.99,
+    target: [0, 0, -0.9], dist: 19, polar: 1.2, azimuth: 2.2, fov: 30,
+    roll: -0.63, orbit: 0.012, spin: 0, shift: 0.95, bright: 1, layers: L(1, 1.2, 0.9), jets: 1, fit: 0.95,
+  },
+  // (The targets of the two illustration views, and the close-up's direction, follow from the
+  // illustration's geometry: see below the table.)
+  'research-btag': {
+    target: TOY.vertex, dist: 0.04, polar: 1.25, azimuth: 0.5, fov: 34,
+    roll: -0.63, orbit: 0, spin: 0, shift: 0.9, bright: 1, layers: L(0, 0.2, 0), toy: 1, steady: true, fit: 0.9, lift: 0.29,
+  },
+  'research-top': {
+    target: TOY.vertex, dist: 6.2, polar: 1.25, azimuth: 0.5, fov: 34,
+    roll: -0.63, orbit: 0, spin: 0, shift: 0.9, bright: 1, layers: L(0, 0.2, 0), toy: 1, steady: true, fit: 0.9, lift: 0.25,
   },
   'research-side': {
     target: [0, 0, -0.25], dist: 19.5, polar: 1.5, azimuth: Math.PI / 2, fov: 32,
-    roll: -0.63, orbit: 0, spin: 0.006, shift: 1.04, bright: 1, layers: L(0.9, 1.6, 1), fit: 0.85,
+    roll: -0.63, orbit: 0, spin: 0.006, shift: 1.04, bright: 1, layers: L(0.9, 1.6, 1), jets: 1, fit: 0.85,
   },
   hardware: {
     target: [0, 0.12, LAYER_Z], dist: 9.2, polar: 1.2, azimuth: 0.6, fov: 34,
@@ -102,15 +157,15 @@ const VIEWS = {
     target: MODULE_POS.toArray(), dist: 0.62, polar: 1.45, azimuth: 0.5, fov: 34,
     roll: 0, orbit: 0, spin: 0, shift: 0.97, bright: 1, layers: L(0, 0, 0, 1, 1), explode: 1, mrot: 1, fog: 1, fit: 0.8,
   },
+  // Teaching: looking along the beam line. The event turns slowly on its own, but not with the
+  // page scroll (steady).
   teaching: {
-    target: [0, -0.25, -0.8], dist: 16, polar: 1.48, azimuth: 0.66, fov: 40,
-    roll: 0.3, orbit: 0, spin: 0.012, shift: 1.12, bright: 0.8, layers: L(0.85, 1.1, 0.8), fit: 0.86,
+    target: [0, 0, 0], dist: 15, polar: Math.PI / 2, azimuth: 0, fov: 26,
+    roll: -1.5, orbit: 0, spin: 0.02, shift: 0.95, bright: 1, layers: L(1, 1.4, 0.9), steady: true, fit: 0.99,
   },
   join: {
-    target: [0, 0, 0], dist: 14.5, polar: 1.12, azimuth: 0.62, fov: 38,
-    roll: -0.9, orbit: 0.025, spin: 0, shift: 1.06, bright: 1, layers: L(1, 1, 1),
-    // Entrance: the camera starts at the collision point and pulls out while the event replays.
-    from: { dist: 0.28, polar: 1.34, azimuth: 1.4, fov: 62 }, pullOut: 3.8,
+    target: [0, 0.05, -0.2], dist: 17.5, polar: 1.17, azimuth: -0.78, fov: 34,
+    roll: -1.45, orbit: 0.03, spin: 0, shift: 0.9, bright: 1, layers: L(1, 0.55, 1), fit: 0.91,
   },
   publications: {
     target: [0, 0, -0.3], dist: 22, polar: 1.24, azimuth: -0.42, fov: 30,
@@ -126,6 +181,26 @@ const VIEWS = {
     roll: 0, orbit: 0, spin: 0, shift: 0.75, bright: 1, layers: L(1, 0.22, 0), solo: 1,
   },
 };
+// The illustration's views. Wide: centered on the jet. Close-up: the b hadron's flight from the
+// collision point to the second vertex and the tracks that start there, seen side-on, from the
+// direction that puts the other two bundles of tracks to one side and as far away as possible.
+{
+  const wide = VIEWS['research-top'], close = VIEWS['research-btag'];
+  const world = v => v.applyAxisAngle(new THREE.Vector3(0, 0, 1), wide.roll);   // the event frame, rolled
+  const at = (deta, dphi) => world(direction(TOY.eta + deta, TOY.phi + dphi));
+  const b = TOY.quarks.find(q => q.b);
+  const axis = at(0, 0), bAxis = at(b.deta, b.dphi);
+  wide.target = TOY_VERTEX.clone().addScaledVector(axis, 0.7).toArray();
+  // In the (eta, phi) plane: the mean direction from the b quark to the other two quarks.
+  const away = new THREE.Vector2();
+  for (const q of TOY.quarks) if (q !== b) away.add(new THREE.Vector2(q.deta - b.deta, q.dphi - b.dphi).normalize());
+  away.normalize();
+  const side = at(0.01, 0).sub(axis).normalize().multiplyScalar(away.x).add(at(0, 0.01).sub(axis).normalize().multiplyScalar(away.y));
+  const eye = new THREE.Vector3().crossVectors(bAxis, side).normalize();
+  if (eye.dot(new THREE.Vector3().setFromSphericalCoords(1, wide.polar, wide.azimuth)) < 0) eye.negate();
+  const sph = new THREE.Spherical().setFromVector3(eye);
+  Object.assign(close, { target: TOY_VERTEX.clone().addScaledVector(bAxis, TOY.flight * 1.5).toArray(), polar: sph.phi, azimuth: sph.theta });
+}
 const HARDWARE = new Set(['hardware', 'hardware-module', 'hardware-exploded']);
 // If the hardware cannot be built (hexaboard.js failed to load), every hardware view shows the
 // endcap pose with the event at full strength instead of an empty close-up.
@@ -134,8 +209,9 @@ const HIT_LAYERS = ['eb', 'ee', 'hb'];
 
 // State vector interpolated between views (dist is stored as a logarithm so zooms feel even).
 const K = { tx: 0, ty: 1, tz: 2, dist: 3, polar: 4, azimuth: 5, fov: 6, shift: 7, event: 8, ecal: 9,
-  hits: 10, hgcal: 11, module: 12, bright: 13, explode: 14, solo: 15, roll: 16, fog: 17, fit: 18, mrot: 19 };
-const NK = 20;
+  hits: 10, hgcal: 11, module: 12, bright: 13, explode: 14, solo: 15, roll: 16, fog: 17, fit: 18, mrot: 19,
+  jets: 20, toy: 21, lift: 22 };
+const NK = 23;
 const ANGLES = [K.azimuth, K.roll];
 
 function viewVector(def, out = new Float64Array(NK)) {
@@ -146,6 +222,7 @@ function viewVector(def, out = new Float64Array(NK)) {
   out[K.hgcal] = def.layers.hgcal; out[K.module] = def.layers.module;
   out[K.explode] = def.explode || 0; out[K.solo] = def.solo || 0; out[K.roll] = def.roll;
   out[K.fog] = def.fog || 0; out[K.fit] = def.fit || FIT; out[K.mrot] = def.mrot || 0;
+  out[K.jets] = def.jets || 0; out[K.toy] = def.toy || 0; out[K.lift] = def.lift || 0;
   return out;
 }
 
@@ -171,6 +248,10 @@ const TRACK_VERT = /* glsl */`
 attribute vec3 iStart;
 attribute vec3 iEnd;
 attribute vec4 iData;          // arc length at start, at end (m), start delay (s), track index
+attribute vec4 iTint;          // the track's jet color (linear rgb) and when it takes it (s); < 0: no jet
+uniform float uTint;           // how much of the jet coloring shows (0..1)
+uniform float uTintTime;       // clustering clock (s)
+uniform float uDim;            // brightness of tracks outside the jets once the coloring is on
 uniform float uTime;
 uniform float uSpeed;
 uniform vec2 uViewport;        // drawing-buffer size (device px)
@@ -182,8 +263,12 @@ varying float vAcross;
 varying float vArc;
 varying float vTip;
 varying float vSolo;
+varying vec4 vTint;            // rgb, amount
+varying float vKeep;
 
 void main() {
+  vTint = vec4(iTint.rgb, iTint.w < 0.0 ? 0.0 : uTint * smoothstep(0.0, 0.3, uTintTime - iTint.w));
+  vKeep = iTint.w < 0.0 ? mix(1.0, uDim, uTint) : 1.0;
   float tip = (uTime - iData.z) * uSpeed;
   float f = clamp((tip - iData.x) / max(iData.y - iData.x, 1e-5), 0.0, 1.0);
   float solo = abs(iData.w - uSolo) < 0.5 ? 1.0 : 0.0;
@@ -231,15 +316,18 @@ uniform float uSoloMix;
 uniform float uSoloTime;       // lone-track pulse clock
 uniform float uSpeed;
 uniform vec2 uFade;            // fade out along the track: start, length (m); length 0 = off
+uniform float uHeadLen;        // length of the bright head behind the growing tip (m)
 varying float vAcross;
 varying float vArc;
 varying float vTip;
 varying float vSolo;
+varying vec4 vTint;
+varying float vKeep;
 
 void main() {
   float d = abs(vAcross) * uHalf;
-  float head = uHead * exp(-max(vTip - vArc, 0.0) / 0.16);
-  float keep = mix(1.0, vSolo, uSoloMix);
+  float head = uHead * exp(-max(vTip - vArc, 0.0) / uHeadLen);
+  float keep = mix(1.0, vSolo, uSoloMix) * vKeep;
   // Lone track: a steady path with a white-hot pulse running outward along it, again and again.
   // (uSoloTime < 0 under reduced motion: no pulse.)
   float behind = uSoloTime * uSpeed * 0.7 - vArc;
@@ -250,13 +338,13 @@ void main() {
   float halo = exp(-0.5 * d * d / (uSigma * uSigma)) * uGlow * (1.0 + 2.0 * head);
   float a = uOpacity * keep * halo;
   if (a < 0.002) discard;
-  gl_FragColor = vec4(mix(uColor, uHeadColor, min(head, 1.0)), clamp(a, 0.0, 1.0));
+  gl_FragColor = vec4(mix(mix(uColor, vTint.rgb, vTint.a), uHeadColor, min(head, 1.0)), clamp(a, 0.0, 1.0));
 #else
   float aa = 0.8 / uPx;
   float core = 1.0 - smoothstep(uCoreW - aa, uCoreW + aa, d);
   float a = uOpacity * keep * core;
   if (a < 0.002) discard;
-  gl_FragColor = vec4(mix(uCore, uHeadColor, min(head, 1.0)), clamp(a, 0.0, 1.0));
+  gl_FragColor = vec4(mix(mix(uCore, mix(vTint.rgb, vec3(1.0), 0.3), vTint.a), uHeadColor, min(head, 1.0)), clamp(a, 0.0, 1.0));
 #endif
   #include <colorspace_fragment>
 }`;
@@ -296,6 +384,122 @@ void main() {
   gl_FragColor = vec4(mix(uColor * vShade, vec3(1.0), 0.65 * flash), a);
   #include <colorspace_fragment>
 }`;
+
+// Jet cones: a faint sheet, brighter toward its silhouette and at its rim, invisible near the
+// vertex (so a close-up of the collision point is not veiled). It grows from the vertex outward.
+const CONE_VERT = /* glsl */`
+attribute float aV;            // 0 at the vertex, 1 at the rim
+varying float vV;
+varying float vEdge;
+
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vec3 n = normalize(normalMatrix * normal);
+  vEdge = 1.0 - abs(dot(n, normalize(-mv.xyz)));
+  vV = aV;
+  gl_Position = projectionMatrix * mv;
+}`;
+
+const CONE_FRAG = /* glsl */`
+uniform vec3 uColor;
+uniform float uOpacity;
+uniform float uGrow;           // 0..1: how far the cone has grown
+varying float vV;
+varying float vEdge;
+
+void main() {
+  if (vV > uGrow) discard;
+  float body = 0.07 + 0.55 * vEdge * vEdge * vEdge;
+  float rim = 0.55 * smoothstep(0.972, 0.99, vV);
+  float front = uGrow < 0.999 ? 0.5 * smoothstep(uGrow - 0.05, uGrow, vV) : 0.0;
+  float a = uOpacity * smoothstep(0.02, 0.32, vV) * (body + rim + front);
+  if (a < 0.002) discard;
+  gl_FragColor = vec4(uColor, min(a, 1.0));
+  #include <colorspace_fragment>
+}`;
+
+// ---------------------------------------------------------------------------------------------
+// Jets
+// ---------------------------------------------------------------------------------------------
+
+// Anti-kT jet clustering (Cacciari, Salam, Soyez, 2008) with E-scheme recombination, on massless
+// particles [{ pt, eta, phi }]. Returns the jets, hardest first, each with the indices of its
+// particles, and for every particle the step at which the algorithm first merged it into a jet.
+function antiKt(parts, R) {
+  const objs = [];
+  parts.forEach((p, i) => {
+    if (!(p.pt > 0) || !Number.isFinite(p.eta)) return;
+    objs.push({ px: p.pt * Math.cos(p.phi), py: p.pt * Math.sin(p.phi), pz: p.pt * Math.sinh(p.eta), e: p.pt * Math.cosh(p.eta),
+      pt: p.pt, eta: p.eta, phi: p.phi, members: [i] });
+  });
+  const joined = new Array(parts.length).fill(-1);
+  const jets = [];
+  for (let step = 0; objs.length; step++) {
+    let best = Infinity, a = -1, b = -1;
+    for (let i = 0; i < objs.length; i++) {
+      const oi = objs[i], ki = 1 / (oi.pt * oi.pt);
+      if (ki < best) { best = ki; a = i; b = -1; }             // distance to the beam: oi is a jet
+      for (let j = i + 1; j < objs.length; j++) {
+        const oj = objs[j], deta = oi.eta - oj.eta;
+        let dphi = Math.abs(oi.phi - oj.phi);
+        if (dphi > Math.PI) dphi = TAU - dphi;
+        const d = Math.min(ki, 1 / (oj.pt * oj.pt)) * (deta * deta + dphi * dphi) / (R * R);
+        if (d < best) { best = d; a = i; b = j; }
+      }
+    }
+    if (b < 0) {
+      const jet = objs.splice(a, 1)[0];
+      for (const m of jet.members) if (joined[m] < 0) joined[m] = step;
+      jets.push(jet);
+      continue;
+    }
+    const oi = objs[a], oj = objs[b];
+    const members = oi.members.concat(oj.members);
+    for (const m of members) if (joined[m] < 0) joined[m] = step;
+    const px = oi.px + oj.px, py = oi.py + oj.py, pz = oi.pz + oj.pz, e = oi.e + oj.e, pt = Math.hypot(px, py);
+    objs.splice(b, 1);                                          // b > a
+    objs.splice(a, 1);
+    objs.push({ px, py, pz, e, pt, eta: Math.asinh(pz / pt), phi: Math.atan2(py, px), members });
+  }
+  jets.sort((p, q) => q.pt - p.pt);
+  return { jets, joined };
+}
+
+// A jet cone: every direction at distance R from the axis in (eta, phi), from the vertex out to
+// where the tracker ends (the barrel radius or the endcap plane).
+function coneMesh(apex, eta, phi, R, color, segments = 64) {
+  const rim = [];
+  for (let k = 0; k < segments; k++) {
+    const a = k / segments * TAU;
+    const d = direction(eta + R * Math.cos(a), phi + R * Math.sin(a));
+    const st = Math.hypot(d.x, d.y);
+    const toBarrel = st > 1e-6 ? TRACKER.r / st : Infinity;
+    const toEndcap = Math.abs(d.z) > 1e-6 ? (Math.sign(d.z) * TRACKER.z - apex.z) / d.z : Infinity;
+    rim.push(apex.clone().addScaledVector(d, Math.min(toBarrel, toEndcap)));
+  }
+  const normals = rim.map((p, k) => {
+    const t = rim[(k + 1) % segments].clone().sub(rim[(k + segments - 1) % segments]);
+    return t.cross(p.clone().sub(apex)).normalize();
+  });
+  const P = new Float32Array(segments * 9), N = new Float32Array(segments * 9), V = new Float32Array(segments * 3);
+  for (let k = 0; k < segments; k++) {
+    const k1 = (k + 1) % segments;
+    apex.toArray(P, k * 9); rim[k].toArray(P, k * 9 + 3); rim[k1].toArray(P, k * 9 + 6);
+    normals[k].toArray(N, k * 9); normals[k].toArray(N, k * 9 + 3); normals[k1].toArray(N, k * 9 + 6);
+    V[k * 3 + 1] = V[k * 3 + 2] = 1;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(P, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+  g.setAttribute('aV', new THREE.BufferAttribute(V, 1));
+  g.computeBoundingSphere();
+  const material = new THREE.ShaderMaterial({
+    vertexShader: CONE_VERT, fragmentShader: CONE_FRAG,
+    uniforms: { uColor: { value: new THREE.Color(color) }, uOpacity: { value: 0 }, uGrow: { value: 0 } },
+    transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+  });
+  return new THREE.Mesh(g, material);
+}
 
 // ---------------------------------------------------------------------------------------------
 // Geometry builders
@@ -339,11 +543,14 @@ function extractChains(root) {
 
 const QUAD = new Float32Array([0, -1, 0, 1, -1, 0, 1, 1, 0, 0, 1, 0]);
 
-// chains: [{ pts, arc0?, index? }]; arc0 continues an earlier track's arc length (404 extension).
+// chains: [{ pts, arc0?, index?, tint? }]; arc0 continues an earlier track's arc length (404
+// extension); tint is the track's jet color and timing, [r, g, b, s] (see iTint).
+const NO_TINT = [0, 0, 0, -1];
 function buildRibbons(chains, delays) {
   let nSeg = 0;
   for (const c of chains) nSeg += c.pts.length / 3 - 1;
   const start = new Float32Array(nSeg * 3), end = new Float32Array(nSeg * 3), data = new Float32Array(nSeg * 4);
+  const tint = new Float32Array(nSeg * 4);
   const lengths = [];
   let s = 0;
   chains.forEach((c, ci) => {
@@ -355,6 +562,7 @@ function buildRibbons(chains, delays) {
       start.set(p.subarray(k, k + 3), s * 3);
       end.set(p.subarray(k + 3, k + 6), s * 3);
       data[s * 4] = arc; data[s * 4 + 1] = arc + len; data[s * 4 + 2] = delays[ci]; data[s * 4 + 3] = c.index ?? ci;
+      tint.set(c.tint || NO_TINT, s * 4);
       arc += len; s++;
     }
     lengths.push(arc - (c.arc0 || 0));
@@ -365,6 +573,7 @@ function buildRibbons(chains, delays) {
   g.setAttribute('iStart', new THREE.InstancedBufferAttribute(start, 3));
   g.setAttribute('iEnd', new THREE.InstancedBufferAttribute(end, 3));
   g.setAttribute('iData', new THREE.InstancedBufferAttribute(data, 4));
+  g.setAttribute('iTint', new THREE.InstancedBufferAttribute(tint, 4));
   g.instanceCount = nSeg;
   return { geometry: g, lengths };
 }
@@ -378,6 +587,7 @@ function ribbonMaterials({ color, core, speed, coreW, sigma, glow, head, half })
     uColor: { value: new THREE.Color(color) }, uCore: { value: new THREE.Color(core) },
     uHeadColor: { value: new THREE.Color(COLOR.head) },
     uSolo: { value: -1 }, uSoloMix: { value: 0 }, uSoloTime: { value: 0 }, uFade: { value: new THREE.Vector2(0, 0) },
+    uTint: { value: 0 }, uTintTime: { value: 0 }, uDim: { value: 1 }, uHeadLen: { value: 0.16 },
   };
   const base = { vertexShader: TRACK_VERT, fragmentShader: TRACK_FRAG, uniforms, transparent: true, depthWrite: false };
   return {
@@ -516,8 +726,13 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   let replayStart = -1;                 // seconds; -1 = not started
   let pendingReplay = !still;           // replay as soon as the tracks are in
   let tracksLoading = true;
-  let joinPending = false;
+  let entrancePending = false;          // the camera waits at a view's entrance pose for the replay
+  let loopAt = 0;                       // when a looping view replays its entrance (s); 0 = not scheduled
+  let jetStart = -1;                    // when the tracks start to take their jets' colors (s); -1 = done
+  let toyStart = -1;                    // when the illustration starts to draw itself (s); -1 = done
   const replayTime = () => (replayStart >= 0 ? now - replayStart : (pendingReplay ? 0 : FINAL));
+  const jetTime = () => (still || jetStart < 0 ? FINAL : now - jetStart);
+  const toyTime = () => (still || toyStart < 0 ? FINAL : now - toyStart);
 
   // --- event layers --------------------------------------------------------------------------
   const layers = {};                    // name -> { object, loadedAt }
@@ -532,6 +747,9 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   const trackMat = ribbonMaterials({ color: COLOR.track, core: COLOR.trackCore, speed: SPEED, coreW: 0.6, sigma: 1.6, glow: 0.32, head: 0.85, half: 4 });
   const soloMat = ribbonMaterials({ color: COLOR.track, core: COLOR.trackCore, speed: SPEED, coreW: 0.6, sigma: 1.6, glow: 0.32, head: 0.85, half: 4 });
   const electronMat = ribbonMaterials({ color: COLOR.electron, core: COLOR.electronCore, speed: ELECTRON_SPEED, coreW: 0.85, sigma: 2.6, glow: 0.55, head: 1, half: 7 });
+  const toyMat = ribbonMaterials({ color: COLOR.track, core: COLOR.trackCore, speed: SPEED, coreW: 0.75, sigma: 1.9, glow: 0.38, head: 0.85, half: 5 });
+  toyMat.uniforms.uTint.value = 1;          // every track of the illustration has its jet's color
+  toyMat.uniforms.uTintTime.value = FINAL;
 
   const glowTex = glowTexture();
   const vertexGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: COLOR.flash, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
@@ -559,14 +777,50 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     return { group, lengths };
   }
 
+  // Jets: cluster the tracks (direction at the start of each track, transverse momentum from the
+  // event file), color the tracks of every jet above JET_MIN_PT and outline it with a cone.
+  const jetCones = [];                  // [{ mesh, t0, t1 }]: each cone grows between t0 and t1 on the clustering clock
+  function addJets(chains, pt) {
+    const parts = chains.map((c, i) => {
+      const q = c.pts, dx = q[3] - q[0], dy = q[4] - q[1], dz = q[5] - q[2];
+      return { pt: pt[i], eta: Math.asinh(dz / Math.max(1e-9, Math.hypot(dx, dy))), phi: Math.atan2(dy, dx) };
+    });
+    const { jets, joined } = antiKt(parts, JET_R);
+    const picked = jets.filter(j => j.pt > JET_MIN_PT).slice(0, COLOR.jets.length);
+    if (!picked.length) return;
+    // The order in which the algorithm merged the tracks of those jets, spread over CLUSTER_TIME.
+    const order = picked.flatMap(j => j.members).sort((a, b) => joined[a] - joined[b]);
+    const when = new Map(order.map((i, k) => [i, CLUSTER_TIME * k / Math.max(1, order.length - 1)]));
+    const group = new THREE.Group();
+    picked.forEach((jet, ji) => {
+      const color = new THREE.Color(COLOR.jets[ji]);
+      let z = 0, w = 0, t0 = Infinity, t1 = 0;
+      for (const i of jet.members) {
+        const t = when.get(i);
+        chains[i].tint = [color.r, color.g, color.b, t];
+        t0 = Math.min(t0, t); t1 = Math.max(t1, t);
+        const q = chains[i].pts;
+        if (Math.hypot(q[0], q[1]) < 0.005) { z += q[2] * pt[i]; w += pt[i]; }   // tracks from the collision point
+      }
+      const mesh = coneMesh(new THREE.Vector3(0, 0, w ? z / w : 0), jet.eta, jet.phi, JET_R, color);
+      mesh.renderOrder = 2.6;
+      group.add(mesh);
+      jetCones.push({ mesh, t0, t1: t1 + 0.4 });
+    });
+    addLayer('jets', group, 2.6);
+  }
+
   const tracksReady = load('Tracks_V3.glb').then(gltf => {
     const chains = extractChains(gltf.scene);
     const delays = chains.map(() => STAGGER[0] + random() * STAGGER[1]);
+    const node = chains[0] && chains[0].node;
+    const pt = node && node.userData && Array.isArray(node.userData.pt) && node.userData.pt.length === chains.length ? node.userData.pt : null;
+    if (pt) {
+      try { addJets(chains, pt); } catch (err) { warn('jets unavailable', err); }
+    }
     const { group, lengths } = ribbons(chains, delays, trackMat, 3);
     addLayer('tracks', group, 3);
     // Lone track for the 404 view: the longest high-momentum track from the primary vertex.
-    const node = chains[0] && chains[0].node;
-    const pt = node && node.userData && Array.isArray(node.userData.pt) && node.userData.pt.length === chains.length ? node.userData.pt : null;
     let best = -1;
     chains.forEach((c, i) => {
       const r0 = Math.hypot(c.pts[0], c.pts[1]);
@@ -616,6 +870,79 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     }
     addLayer('geometry', group, 1);
   }).catch(err => warn('detector geometry unavailable', err));
+
+  // --- illustration: the jet of a fast top quark (research views; not CMS data) -----------------
+  // Three bundles of tracks (the b quark and the two quarks from the W boson), a cone around each
+  // and a wide one around all three. Four tracks of the b jet start at a second vertex, where the
+  // b hadron decayed after a short flight (drawn as a dotted line).
+  const toy = (() => {
+    const rand = rng(1725);
+    const B = 3.8;                      // T: charged particles curl in the solenoid's field
+    const chains = [], delays = [];
+    function helix(origin, pt, eta, phi, q) {
+      const R = pt / (0.3 * B), th0 = phi - q * Math.PI / 2, sinh = Math.sinh(eta);
+      const cx = origin.x - R * Math.cos(th0), cy = origin.y - R * Math.sin(th0);
+      const pts = [];
+      for (let a = 0; a < 6; a += 0.03) {                     // a: arc length in the transverse plane (m)
+        const th = th0 + q * a / R;
+        const x = cx + R * Math.cos(th), y = cy + R * Math.sin(th), z = origin.z + a * sinh;
+        if (Math.hypot(x, y) > TRACKER.r || Math.abs(z) > TRACKER.z) break;
+        pts.push(x, y, z);
+      }
+      return new Float32Array(pts);
+    }
+    const group = new THREE.Group();
+    const cones = [];
+    let sv = TOY_VERTEX.clone(), wi = 0;
+    for (const quark of TOY.quarks) {
+      const eta = TOY.eta + quark.deta, phi = TOY.phi + quark.dphi;
+      const color = new THREE.Color(quark.b ? COLOR.toyB : COLOR.toyW[wi++]);
+      const tint = [color.r, color.g, color.b, 0];
+      const add = (origin, pt, delta, angle, delay) => {
+        const pts = helix(origin, Math.max(1.5, pt), eta + delta * Math.cos(angle), phi + delta * Math.sin(angle), rand() < 0.5 ? 1 : -1);
+        if (pts.length >= 9) { chains.push({ pts, tint }); delays.push(delay); }
+      };
+      if (quark.b) {
+        // A few tracks from the collision point, clear of the b hadron's line of flight, and its
+        // decay products, which start at the second vertex (their angles are widened to be legible).
+        [0.07, 0.05, 0.035].forEach((z, k) => add(TOY_VERTEX, z * quark.pt, 0.11 + 0.03 * k, (k + 0.3 * rand()) * TAU / 3 + 2.2, 0.1 + 0.2 * rand()));
+        sv = TOY_VERTEX.clone().addScaledVector(direction(eta, phi), TOY.flight);
+        [0.2, 0.13, 0.08, 0.05].forEach((z, k) => add(sv, z * quark.pt, 0.07 + 0.04 * k, (k + 0.4 * rand()) * TAU / 4 + 0.6, TOY.decayAt));
+      } else {
+        // Tracks from the collision point: fractions of the quark's momentum, the softer ones at wider angles.
+        for (const z of [0.24, 0.16, 0.11, 0.08, 0.055, 0.04, 0.03, 0.02]) {
+          add(TOY_VERTEX, z * quark.pt * (0.8 + 0.4 * rand()), Math.min(0.19, 0.035 / Math.sqrt(z) * (0.4 + 1.2 * rand())), rand() * TAU, 0.1 + 0.2 * rand());
+        }
+      }
+      const mesh = coneMesh(TOY_VERTEX, eta, phi, TOY.subR, color);
+      mesh.renderOrder = 2.6;
+      group.add(mesh);
+      cones.push({ mesh, t0: TOY.conesAt, t1: TOY.conesAt + 0.8, strength: 1 });
+    }
+    const wide = coneMesh(TOY_VERTEX, TOY.eta, TOY.phi, TOY.R, COLOR.toyCone);
+    wide.renderOrder = 2.55;
+    group.add(wide);
+    cones.push({ mesh: wide, t0: TOY.conesAt + 0.7, t1: TOY.conesAt + 1.6, strength: 0.55 });
+    group.add(ribbons(chains, delays, toyMat, 3).group);
+
+    const N = 9;
+    const dots = new Float32Array(N * 3);
+    for (let k = 0; k < N; k++) TOY_VERTEX.clone().lerp(sv, (k + 1) / (N + 1)).toArray(dots, k * 3);
+    const dotGeometry = new THREE.BufferGeometry();
+    dotGeometry.setAttribute('position', new THREE.BufferAttribute(dots, 3));
+    const flight = new THREE.Points(dotGeometry, new THREE.PointsMaterial({ size: 14, sizeAttenuation: false, map: glowTex, color: COLOR.toyFlight, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    flight.frustumCulled = false;
+    const glow = color => new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
+    const pvGlow = glow(COLOR.flash), svGlow = glow(COLOR.toyB);
+    pvGlow.position.copy(TOY_VERTEX);
+    svGlow.position.copy(sv);
+    flight.renderOrder = pvGlow.renderOrder = svGlow.renderOrder = 5;
+    group.add(flight, pvGlow, svGlow);
+    group.visible = false;
+    group.renderOrder = 3.2;
+    eventRoot.add(group);
+    return { group, cones, flight, dots: N, pvGlow, svGlow };
+  })();
 
   // --- HGCAL hardware (lazy) -----------------------------------------------------------------
   let hgcal = null;                     // { layer, module, layerFade, moduleFade, loadedAt }
@@ -690,7 +1017,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   };
   const dip = { active: false, start: 0, dur: 0.5, swapped: false, apply: null };
   let fade = 1;
-  const joinFrom = new Float64Array(NK);
+  const entranceFrom = new Float64Array(NK);
 
   function soloView(pts) {
     // Camera off to the side and a little behind the collision point, so the track runs from the
@@ -741,7 +1068,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     const win = (keys, a, b) => { for (const k of keys) { tr.a[k] = a; tr.b[k] = b; } };
     if (zoom > 0.6) { win([K.dist, K.polar, K.azimuth], 0, 0.8); win([K.tx, K.ty, K.tz], 0.3, 1); }
     else if (zoom < -0.6) { win([K.tx, K.ty, K.tz], 0, 0.75); win([K.dist], 0.2, 1); }
-    for (const k of [K.event, K.ecal, K.hits, K.hgcal, K.module, K.explode, K.solo, K.mrot]) {
+    for (const k of [K.event, K.ecal, K.hits, K.hgcal, K.module, K.explode, K.solo, K.mrot, K.jets, K.toy]) {
       if (t[k] < f[k] - 1e-3) win([k], 0, 0.55);
       else if (t[k] > f[k] + 1e-3) win([k], k === K.explode || k === K.mrot ? 0.4 : 0.3, 1);
     }
@@ -752,28 +1079,32 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     needsRender = true;
   }
 
-  function startJoinPullOut() {
-    joinPending = false;
-    const d = VIEWS.join;
-    viewVector(d, joinFrom);
-    joinFrom[K.dist] = Math.log(d.from.dist); joinFrom[K.polar] = d.from.polar;
-    joinFrom[K.azimuth] = d.from.azimuth; joinFrom[K.fov] = d.from.fov;
-    state.set(joinFrom);
-    startTransition(d, d.pullOut, joinFrom);
+  // Entrances (views with `from`): the camera cuts to the entrance pose, such as the collision
+  // point, and pulls out to the view while the event replays.
+  function entrancePose(d) {
+    viewVector(d, entranceFrom);
+    entranceFrom[K.dist] = Math.log(d.from.dist); entranceFrom[K.polar] = d.from.polar;
+    entranceFrom[K.azimuth] = d.from.azimuth; entranceFrom[K.fov] = d.from.fov;
+    return entranceFrom;
   }
 
-  function enterJoin() {
-    // Cut to the collision point (the camera would otherwise fly through the detector), then
-    // replay the event while pulling out. The cut happens while the old event is still dark.
-    if (still) { setState(def); return; }   // paused during the dip: no pull-out, no replay
-    const d = VIEWS.join;
-    viewVector(d, joinFrom);
-    joinFrom[K.dist] = Math.log(d.from.dist); joinFrom[K.polar] = d.from.polar;
-    joinFrom[K.azimuth] = d.from.azimuth; joinFrom[K.fov] = d.from.fov;
-    state.set(joinFrom);
+  function startPullOut() {
+    entrancePending = false;
+    if (!def.from) return;
+    state.set(entrancePose(def));
+    startTransition(def, def.pullOut, entranceFrom);
+    // A looping view dips to dark and starts again, so that the next replay begins `loop` seconds after this one.
+    loopAt = def.loop ? clock() + def.loop - LOOP_DIP / 2 : 0;
+  }
+
+  function enterEntrance() {
+    // Cut to the entrance pose (the camera would otherwise fly through the detector), then replay
+    // the event while pulling out. The cut happens while the old picture is still dark.
+    if (still || !def.from) { setState(def); return; }   // paused during the dip: no pull-out, no replay
+    state.set(entrancePose(def));
     vel.fill(0);
     tr.active = false;
-    joinPending = true;
+    entrancePending = true;
     replay();
   }
 
@@ -782,11 +1113,13 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     if (disposed) return;
     const next = VIEWS[name] ? name : 'home';
     if (next === viewName) return;
+    const prev = def;
     viewName = next;
     def = hgcalFailed && HARDWARE.has(next) ? HARDWARE_FALLBACK : VIEWS[next];
     const token = ++flightToken;       // cancels a flight still waiting for the hardware
     if (HARDWARE.has(next)) ensureHGCAL();
     needsRender = true;
+    loopAt = 0;
 
     if (still) {
       // No flying: a quick dip to dark, swap, fade back in.
@@ -794,14 +1127,14 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       startDip(0.5, () => setState(def));
       return;
     }
-    if (next === 'join') {
-      if (instant) { enterJoin(); return; }
-      startDip(0.6, enterJoin);
+    if (def.from) {
+      if (instant) { enterEntrance(); return; }
+      startDip(LOOP_DIP, enterEntrance);
       return;
     }
     dip.active = false;                 // (a cut-off dip fades back up in update)
-    joinPending = false;
-    if (instant) { setState(def); return; }
+    entrancePending = false;
+    if (instant) { setState(def); startClocks(prev, 0.3); return; }
     if (HARDWARE.has(next) && !hgcal) {
       // The hardware is built on first use (textures painted, shaders compiled). Hold the flight
       // until it is ready, briefly, so that work does not stall the camera halfway.
@@ -813,6 +1146,18 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       return;
     }
     startTransition(def, null);
+    startClocks(prev, tr.dur * 0.8);
+  }
+
+  // Arriving from a view that did not show them, the jets are clustered again and the
+  // illustration draws itself again, starting as the camera arrives.
+  function startClocks(prev, delay) {
+    if (def.jets && !prev.jets) {
+      // (Never before a replay that is still running has finished.)
+      const afterReplay = replayStart >= 0 ? replayStart + REPLAY_END + CLUSTER_START : 0;
+      jetStart = Math.max(clock() + delay, afterReplay);
+    }
+    if (def.toy && !prev.toy) toyStart = clock() + delay;
   }
 
   // Dip to dark and back, swapping the view at the darkest point. A dip that is already on its way
@@ -837,10 +1182,11 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     pendingReplay = false;
     replayStart = clock();
     needsRender = true;
-    if (joinPending) startJoinPullOut();
+    if (def.jets) jetStart = replayStart + REPLAY_END + CLUSTER_START;   // the jets form once the event is complete
+    if (entrancePending) startPullOut();
   }
 
-  // Initial pose: the requested view; join starts inside the collision.
+  // Initial pose: the requested view; a view with an entrance starts at its entrance pose.
   if (HARDWARE.has(viewName)) ensureHGCAL();
   else {
     // Fetch the hardware code in idle time once the event is in, so a later visit to the hardware
@@ -852,12 +1198,9 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       import('three/addons/environments/RoomEnvironment.js').catch(() => {});
     }), 6000);
   }
-  if (viewName === 'join' && !still) {
-    viewVector(def, joinFrom);
-    joinFrom[K.dist] = Math.log(def.from.dist); joinFrom[K.polar] = def.from.polar;
-    joinFrom[K.azimuth] = def.from.azimuth; joinFrom[K.fov] = def.from.fov;
-    state.set(joinFrom);
-    joinPending = true;
+  if (def.from && !still) {
+    state.set(entrancePose(def));
+    entrancePending = true;
   }
 
   // --- input: scroll roll and pointer parallax ------------------------------------------------
@@ -890,7 +1233,8 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     renderer.setPixelRatio(ratio);
     renderer.setSize(w, h, false);
     const buf = renderer.getDrawingBufferSize(new THREE.Vector2());
-    for (const m of [trackMat, soloMat, electronMat]) { m.uniforms.uViewport.value.copy(buf); m.uniforms.uPx.value = ratio; }
+    for (const m of [trackMat, soloMat, electronMat, toyMat]) { m.uniforms.uViewport.value.copy(buf); m.uniforms.uPx.value = ratio; }
+    toy.flight.material.size = 14 * ratio;
     needsRender = true;
   }
   const ro = 'ResizeObserver' in window ? new ResizeObserver(resize) : null;
@@ -963,6 +1307,12 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       moving = true;
     }
 
+    // A looping view replays its entrance through a short dip to dark.
+    if (loopAt && now >= loopAt && !still && !dip.active) {
+      loopAt = 0;
+      startDip(LOOP_DIP, enterEntrance);
+    }
+
     if (tr.active) {
       const s = Math.min(1, (now - tr.start) / tr.dur);
       hermite(s, tr.dur);
@@ -980,7 +1330,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
 
     // Scroll-linked roll and pointer parallax, both eased.
     if (!still) {
-      const goal = (window.scrollY || 0) * 0.00025;
+      const goal = def.steady ? 0 : (window.scrollY || 0) * 0.00025;
       const ease = 1 - Math.exp(-dt * 4);
       if (Math.abs(goal - scrollRoll) > 1e-4) { scrollRoll += (goal - scrollRoll) * ease; moving = true; }
       if (finePointer) {
@@ -1006,14 +1356,14 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     const fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(state[K.fov]) / 2) * Math.pow(fit, 0.58)));
     const shift = state[K.shift] * stage.center;
     const near = clamp(sph.radius * 0.02, 0.005, 0.1);
-    const drop = heroDrop();
+    const drop = heroDrop() - (width > WIDE ? 0 : state[K.lift]);
     if (fov !== lastFov || shift !== lastShift || aspect !== lastAspect || near !== lastNear || drop !== lastDrop) {
       if (drop !== lastDrop) needsRender = true;
       lastFov = fov; lastShift = shift; lastAspect = aspect; lastNear = near; lastDrop = drop;
       camera.fov = fov;
       camera.aspect = aspect;
       camera.near = near;
-      if (shift > 0.001 || drop > 0.001) camera.setViewOffset(width, height, -shift * width, -drop * height, width, height);
+      if (shift > 0.001 || Math.abs(drop) > 0.001) camera.setViewOffset(width, height, -shift * width, -drop * height, width, height);
       else camera.clearViewOffset();
       camera.updateProjectionMatrix();
     }
@@ -1034,9 +1384,28 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     const ev = clamp(state[K.event], 0, 2) * b;
     const solo = clamp(state[K.solo], 0, 1);
 
+    // Jets: the tracks take their jet's color in the order they were merged, the rest dim, and
+    // the cones grow from the vertex.
+    const jets = clamp(state[K.jets], 0, 1);
+    const jt = jetTime();
+    const dim = 1 - (1 - JET_DIM) * smooth(0, CLUSTER_TIME, jt);
+    if (jets > 0.003 && jt < CLUSTER_TIME + 1.2) moving = true;
+    if (layers.jets) {
+      const o = ev * jets * (1 - solo) * loadFade('jets');
+      layers.jets.object.visible = o > 0.003;
+      for (let i = 0; i < jetCones.length; i++) {
+        const c = jetCones[i], u = c.mesh.material.uniforms;
+        u.uOpacity.value = o;
+        u.uGrow.value = smooth(c.t0, c.t1, jt);
+      }
+    }
+
     if (layers.tracks) {
       const u = trackMat.uniforms;
       u.uTime.value = t;
+      u.uTint.value = jets;
+      u.uTintTime.value = jt;
+      u.uDim.value = dim;
       u.uOpacity.value = ev * loadFade('tracks');
       u.uSolo.value = soloIndex;
       u.uSoloMix.value = soloIndex >= 0 ? solo : 0;
@@ -1054,7 +1423,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     if (layers.electrons) {
       const u = electronMat.uniforms;
       u.uTime.value = t;
-      u.uOpacity.value = ev * (1 - solo) * loadFade('electrons');
+      u.uOpacity.value = ev * (1 - solo) * (1 + (dim - 1) * jets) * loadFade('electrons');
       layers.electrons.object.visible = u.uOpacity.value > 0.002;
     }
     const hitsOpacity = clamp(state[K.hits], 0, 2) * b * 0.55;
@@ -1087,6 +1456,41 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     const soloBeat = still ? 0 : solo * Math.exp(-(now % 4.6) / 0.3);   // the lone track's pulse leaves the vertex
     vertexGlow.material.opacity = ev * (0.42 * smooth(0.05, 0.5, t) + 0.5 * soloBeat);
     vertexGlow.visible = vertexGlow.material.opacity > 0.003;
+
+    // The illustrated top-quark jet. Close to the collision point everything slows down, so that
+    // the tracks can be seen growing; from far away they grow at the event's own speed.
+    const toyA = clamp(state[K.toy], 0, 1) * b;
+    toy.group.visible = toyA > 0.003;
+    if (toy.group.visible) {
+      const tt = toyTime();
+      if (tt < TOY.end) moving = true;
+      const d0 = Math.exp(state[K.dist]);
+      const speed = clamp(d0 * 1.4, 0.06, SPEED);
+      const u = toyMat.uniforms;
+      u.uTime.value = tt;
+      u.uSpeed.value = speed;
+      u.uHeadLen.value = 0.16 * speed / SPEED;
+      u.uOpacity.value = toyA;
+      for (let i = 0; i < toy.cones.length; i++) {
+        const c = toy.cones[i], cu = c.mesh.material.uniforms;
+        cu.uOpacity.value = toyA * c.strength;
+        cu.uGrow.value = smooth(c.t0, c.t1, tt);
+      }
+      // The two vertices and the b hadron's flight between them only show from close by.
+      const near = 1 - smooth(0.3, 2.2, d0);
+      const pvDist = camera.position.distanceTo(toy.pvGlow.getWorldPosition(tmp));
+      const ps = Math.min(0.55, pvDist * 0.3);
+      toy.pvGlow.scale.set(ps, ps, 1);
+      toy.pvGlow.material.opacity = toyA * 0.42 * smooth(0.05, 0.5, tt);
+      const decayed = tt - TOY.decayAt;
+      const ss = pvDist * (0.26 + 0.5 * (decayed > 0 ? Math.exp(-decayed / 0.25) : 0));
+      toy.svGlow.scale.set(ss, ss, 1);
+      toy.svGlow.material.opacity = decayed > 0 ? toyA * near * (0.7 + 0.3 * Math.exp(-decayed / 0.3)) : 0;
+      toy.svGlow.visible = toy.svGlow.material.opacity > 0.003;
+      toy.flight.geometry.setDrawRange(0, Math.round(toy.dots * smooth(0.5, TOY.decayAt, tt)));
+      toy.flight.material.opacity = toyA * near * 0.9;
+      toy.flight.visible = toy.flight.material.opacity > 0.003;
+    }
 
     // HGCAL.
     if (hgcal) {
@@ -1174,10 +1578,14 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     still = next;
     if (still) {
       // Land where things were heading: a flight ends at its view, a replay shows its last frame.
-      if (tr.active) setState(def);
+      if (tr.active || entrancePending) setState(def);
       pendingReplay = false;
       replayStart = -1;
-      joinPending = false;
+      entrancePending = false;
+      loopAt = 0;
+      jetStart = toyStart = -1;        // jets and illustration: complete
+    } else if (def.loop && !dip.active) {
+      startDip(LOOP_DIP, enterEntrance);   // a looping view starts over when the scene resumes
     }
     needsRender = true;
     start();
