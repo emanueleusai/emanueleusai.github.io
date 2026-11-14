@@ -18,6 +18,11 @@
   --track: #ffd23f;   /* tracks */
   --ecal: #46e27a;    /* ECAL hits */
   --hcal: #4db8ff;    /* HCAL hits */
+  --jet-1: #ff8a4c;   /* jets found in the event (research page; scene.js COLOR.jets) */
+  --jet-2: #b98cff;
+  --b-jet: #ff6b6b;   /* illustration: the b jet and the two jets from the W (scene.js COLOR.toyB, toyW) */
+  --w-jet-1: #5ad1ff;
+  --w-jet-2: #b98cff;
   --link: #8fd0ff;
   --link-hover: #ffd23f;
   --danger: #ff6b6b;
@@ -508,6 +513,18 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
 .legend-dot--track { background: var(--track); }
 .legend-dot--ecal { background: var(--ecal); }
 .legend-dot--hcal { background: var(--hcal); }
+.legend-dot--jet1 { background: var(--jet-1); }
+.legend-dot--jet2 { background: var(--jet-2); }
+.legend-dot--bjet { background: var(--b-jet); }
+.legend-dot--wjet1 { background: var(--w-jet-1); }
+.legend-dot--wjet2 { background: var(--w-jet-2); }
+/* A longer note on what the 3D scene shows (research page): a wrapping caption, and a shorter gap
+   than the plain .scene-gap. Unlike the legends, the notes are hidden when there is no 3D. */
+.scene-caption--note { display: block; width: fit-content; max-width: min(100%, 46ch); margin: 0; border-radius: 14px; line-height: 1.7; }
+.scene-caption--note sub { line-height: 0; }
+.hero .scene-caption--note { margin-top: 28px; }
+.scene-gap--note { display: flex; align-items: flex-end; height: 38vh; padding-bottom: clamp(32px, 5vw, 56px); }
+@media (max-width: 720px) { .scene-gap--note { height: 44vh; } }
 .about-row { grid-template-columns: minmax(0, 1fr) 200px; align-items: start; }
 .about-photo img { aspect-ratio: 1; object-fit: cover; }
 @media (max-width: 820px) { .about-row { grid-template-columns: 1fr; } .about-photo { display: none; } }
