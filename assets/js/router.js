@@ -188,7 +188,7 @@ export function initRouter({ beforeSwap, afterSwap, reducedMotion }) {
   // Prefetch on intent.
   const prefetch = e => {
     const a = e.target.closest?.('a[href]');
-    if (!a) return;
+    if (!a || a.dataset.noRouter !== undefined) return;       // (links that leave the site's shell, such as slide decks)
     const url = new URL(a.getAttribute('href'), location.href);
     if (isInternalPage(url) && !samePage(url)) fetchPage(url.href.split('#')[0]).catch(() => {});
   };
