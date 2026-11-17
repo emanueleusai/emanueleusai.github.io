@@ -3,10 +3,13 @@
 // The models are a real CMS collision event exported from the iSpy event display (models/*.glb,
 // meters, beam along z): charged-particle tracks (yellow), ECAL energy deposits in the barrel and
 // endcaps (EB/EE, green), HCAL barrel deposits (HB, blue), two reconstructed electrons, and the ECAL
-// barrel geometry drawn as faint glass. The hardware views add a procedural HGCAL layer and module
-// from hexaboard.js, loaded on first use. The research views group the event's tracks into jets
+// barrel geometry drawn as faint glass. The research views group the event's tracks into jets
 // (a real anti-kT clustering, run here on the track data) and add an illustration, which is not
 // CMS data, of how b jets and top-quark jets are tagged.
+//
+// Some views show larger objects, each built by its own module and loaded on first use (see
+// PROPS): the hardware views show an HGCAL endcap (hgcal.js), one of its cassettes (cassette.js)
+// and one silicon module (hexaboard.js).
 //
 // Contract (see SPEC.md): initScene({ canvas, reducedMotion, initialView, paused }) ->
 // { setView, replay, setPaused, dispose }. setPaused(true) stops everything that moves on its own
@@ -16,6 +19,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { TAU, clamp, smooth, rng, fadeable, setTransparent, setFade } from './kit.js';
 
 const MODEL_DIR = new URL('../../models/', import.meta.url);
 
@@ -70,12 +74,26 @@ const TOY = {
 const GEOMETRY_ALPHA = 0.01;      // per-face alpha of the ECAL barrel glass (as in the original export)
 const GEOMETRY_LINE_ALPHA = 0.02;
 
-// HGCAL (endcap calorimeter upgrade): a layer just in front of the EE deposits, and one module
-// pulled out of it toward the viewer.
-const LAYER_Z = 3.45;
-const MODULE_POS = new THREE.Vector3(1.0, 0.62, LAYER_Z + 0.4);
-// Close-up: the module faces the viewer, tilted a little. Exploded: it lies back (face up) so
-// its layers separate vertically on screen, like an assembly drawing.
+// HGCAL (endcap calorimeter upgrade). The endcap stands on the detector's far side (-z) with its
+// front toward the collision point, so the camera, on the near side, looks at its face. One
+// cassette lies where the endcap's first layer is, on its side: the narrow end at the beam line,
+// the wide end (where its services leave) to the right. One module is taken off the cassette and
+// pulled out toward the viewer.
+const ENDCAP_Z = -4.19;           // the endcap's middle (hgcal.js: Z0)
+const CASSETTE_POS = new THREE.Vector3(0, 0, -3.2);
+const CASSETTE_Q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+const onCassette = (x, y, z) => new THREE.Vector3(x, y, z).applyQuaternion(CASSETTE_Q).add(CASSETTE_POS);
+const CASSETTE_CENTER = onCassette(0, 0.97, 0);            // the middle of the wedge (cassette.js: CENTER)
+// Where the module sits on the cassette (cassette.js: pickSite, just above the board it replaces),
+// and where it is held for the close-ups.
+const MODULE_SEAT = onCassette(0.0848, 1.094, 0.0065);
+const MODULE_POS = MODULE_SEAT.clone().add(new THREE.Vector3(0.06, -0.03, 0.4));
+// For the exploded view it comes this much further out, which leaves the cassette in the dark.
+const MODULE_OUT = new THREE.Vector3(0.05, 0, 0.45);
+// Seated: flat on the cassette, turned as the cassette is. Close-up: the module faces the viewer,
+// tilted a little. Exploded: it lies back (face up) so its layers separate vertically on screen,
+// like an assembly drawing.
+const MODULE_Q_SEAT = CASSETTE_Q;
 const MODULE_Q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.12, 0.2, 0.12));
 const MODULE_Q_EXPLODED = new THREE.Quaternion().setFromEuler(new THREE.Euler(-1.2, 0.5, 0.35, 'YXZ'));
 const EXPLODE_SPACING = 0.13;     // m between the baseplate and the readout chips, fully exploded
@@ -101,7 +119,7 @@ const FOG_OFF = [90, 180];
 // Views. Camera: look-at target (m), distance (m), polar angle from +y and azimuth around +y
 // (measured from +z toward +x), vertical fov (deg, landscape). Layers are opacity multipliers:
 // event = tracks, electrons and vertex glow; ecal = barrel geometry; hits = EB/EE/HB deposits;
-// hgcal = the HGCAL layer; module = the single module. orbit: camera drift (rad/s); roll: event
+// module = the single HGCAL module. orbit: camera drift (rad/s); roll: event
 // angle about the beam axis (rad) and spin its speed (rad/s); steady: the event does not roll
 // with the page scroll; shift: placement on the stage of wide screens (see COLUMN); fit: aspect
 // below which narrow screens pull back (default FIT); bright: overall brightness. from, pullOut:
@@ -110,12 +128,30 @@ const FOG_OFF = [90, 180];
 // tracks take their jet's color and the jet cones show. toy (0..1): the illustrated top-quark jet.
 // lift: on narrow screens, how far above the center the subject sits (fraction of the viewport
 // height), so that it shows in the gap above a section's text.
-// Hardware close-ups only: fog (0..1, see FOG), explode (the module's layers apart, 0..1) and mrot
-// (the module laid back for the exploded view, 0..1).
+// Hardware close-ups only: fog (0..1, see FOG), mlift (the module taken off the cassette, 0..1),
+// explode (the module's layers apart, 0..1) and mrot (the module laid back for the exploded view,
+// 0..1). props: the larger objects a view shows, by name (see PROPS), each with the settings it
+// overrides; fly: seconds the camera takes to reach the view (otherwise set by the distance);
+// fallback: the view shown instead when one of those objects cannot be built.
 // ---------------------------------------------------------------------------------------------
-const L = (event, ecal, hits, hgcal = 0, module = 0) => ({ event, ecal, hits, hgcal, module });
+const L = (event, ecal, hits, module = 0) => ({ event, ecal, hits, module });
+// The CV page's globe: the point of its map that faces the viewer (the middle of the Atlantic), and
+// the azimuth of the camera that looks at it (that of the page's event view, so the camera hardly moves).
+const GLOBE_CENTER = { lat: 44, lon: -32 };
+const GLOBE_AZIMUTH = 2.35;
 const TOY_VERTEX = new THREE.Vector3().fromArray(TOY.vertex);
 const direction = (eta, phi) => new THREE.Vector3(Math.cos(phi), Math.sin(phi), Math.sinh(eta)).normalize();
+// The illustrated jet's own frame, in the event: y along the jet, x across it (perpendicular to
+// the beam) and z the third axis. The transformer is built in this frame, above the jet.
+const TOY_AXIS = direction(TOY.eta, TOY.phi);
+const TOY_Q = (() => {
+  const side = new THREE.Vector3().crossVectors(TOY_AXIS, new THREE.Vector3(0, 0, 1)).normalize();
+  const depth = new THREE.Vector3().crossVectors(side, TOY_AXIS);
+  return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(side, TOY_AXIS, depth));
+})();
+const TOY_Q_INV = TOY_Q.clone().invert();
+// The roll that stands the jet upright on screen.
+const TOY_UPRIGHT = Math.PI / 2 - TOY.phi;
 
 const VIEWS = {
   // Home: the camera starts at the collision point and pulls out while the event replays, then
@@ -145,23 +181,63 @@ const VIEWS = {
     target: [0, 0, -0.25], dist: 19.5, polar: 1.5, azimuth: Math.PI / 2, fov: 32,
     roll: -0.63, orbit: 0, spin: 0.006, shift: 1.04, bright: 1, layers: L(0.9, 1.6, 1), jets: 1, fit: 0.85,
   },
+  // The illustrated jet stood upright, and above it the transformer that classifies it (the
+  // target, halfway up the whole, is set below the table).
+  'research-ai': {
+    target: TOY.vertex, dist: 11.5, polar: 0.98, azimuth: 0.34, fov: 30,
+    roll: TOY_UPRIGHT, orbit: 0, spin: 0, shift: 1, bright: 1, layers: L(0, 0.15, 0), toy: 1, steady: true, fit: 0.56, lift: 0.09, fly: 2.4,
+    props: { transformer: {} },
+  },
+  // Hardware: from the whole to the part. One endcap with a quadrant cut away; its front layers
+  // pulled apart; one cassette of the first layer; one module taken off the cassette; the module's
+  // own layers apart.
   hardware: {
-    target: [0, 0.12, LAYER_Z], dist: 9.2, polar: 1.2, azimuth: 0.6, fov: 34,
-    roll: 0, orbit: 0.008, spin: 0, shift: 0.87, bright: 1, layers: L(0.14, 0.22, 0.24, 1, 0), fit: 0.8,
+    target: [0.35, -0.1, ENDCAP_Z - 0.33], dist: 14.2, polar: 1.15, azimuth: 0.74, fov: 30,
+    roll: 0, orbit: 0.008, spin: 0, shift: 1, bright: 1, layers: L(0.14, 0.3, 0), fit: 0.72, lift: 0.08, fly: 2.2,
+    props: { endcap: {} },
+  },
+  'hardware-layers': {
+    target: [0.12, -0.1, ENDCAP_Z], dist: 10.4, polar: 1.02, azimuth: 0.8, fov: 30,
+    roll: 0, orbit: 0, spin: 0, shift: 1, bright: 1, layers: L(0, 0, 0), fit: 0.75, fly: 2.2,
+    props: { endcap: { exE: 1, absE: 0, showH: 0, glowE: 2 } },
+  },
+  'hardware-cassette': {
+    target: CASSETTE_CENTER.toArray(), dist: 4.3, polar: 1.3, azimuth: 0.3, fov: 30,
+    roll: 0, orbit: 0.006, spin: 0, shift: 1, bright: 1, layers: L(0, 0, 0), fit: 0.78, fly: 2.4,
+    props: { cassette: {} },
   },
   'hardware-module': {
-    target: MODULE_POS.toArray(), dist: 0.55, polar: 1.12, azimuth: 0.7, fov: 34,
-    roll: 0, orbit: 0, spin: 0, shift: 0.97, bright: 1, layers: L(0, 0, 0, 1, 1), explode: 0, fog: 1, fit: 0.8,
+    target: MODULE_POS.toArray(), dist: 0.52, polar: 1.12, azimuth: 0.7, fov: 34,
+    roll: 0, orbit: 0, spin: 0, shift: 0.97, bright: 1, layers: L(0, 0, 0, 1), mlift: 1, explode: 0, fog: 1, fit: 0.8, fly: 2.4,
+    props: { cassette: { elec: 0, serv: 0, pick: 1 } },
   },
   'hardware-exploded': {
-    target: MODULE_POS.toArray(), dist: 0.62, polar: 1.45, azimuth: 0.5, fov: 34,
-    roll: 0, orbit: 0, spin: 0, shift: 0.97, bright: 1, layers: L(0, 0, 0, 1, 1), explode: 1, mrot: 1, fog: 1, fit: 0.8,
+    target: MODULE_POS.clone().add(MODULE_OUT).toArray(), dist: 0.62, polar: 1.45, azimuth: 0.5, fov: 34,
+    roll: 0, orbit: 0, spin: 0, shift: 0.97, bright: 1, layers: L(0, 0, 0, 1), mlift: 1, explode: 1, mrot: 1, fog: 1, fit: 0.8, fly: 2,
+    props: { cassette: { elec: 0, serv: 0, pick: 1 } },
   },
   // Teaching: looking along the beam line. The event turns slowly on its own, but not with the
   // page scroll (steady).
   teaching: {
     target: [0, 0, 0], dist: 15, polar: Math.PI / 2, azimuth: 0, fov: 26,
     roll: -1.5, orbit: 0, spin: 0.02, shift: 0.95, bright: 1, layers: L(1, 1.4, 0.9), steady: true, fit: 0.99,
+  },
+  // Three illustrations from the courses, each in place of the event: an electromagnetic wave
+  // (PH106), a spinning top (PH302) and the electron cloud of a hydrogen atom (PH253).
+  'teaching-ph106': {
+    target: [0, 0.1, 0], dist: 19.5, polar: 1.22, azimuth: 0.62, fov: 26,
+    roll: -1.5, orbit: 0.02, spin: 0.02, shift: 1, bright: 1, layers: L(0, 0, 0), steady: true, fit: 0.62, lift: 0.09, fly: 2,
+    props: { wave: {} },
+  },
+  'teaching-ph302': {
+    target: [0, 0.15, 0], dist: 15.5, polar: 1.16, azimuth: 0.5, fov: 26,
+    roll: -1.5, orbit: 0.012, spin: 0.02, shift: 1, bright: 1, layers: L(0, 0, 0), steady: true, fit: 0.7, lift: 0.09, fly: 2,
+    props: { top: {} },
+  },
+  'teaching-ph253': {
+    target: [0, -0.75, 0], dist: 24, polar: 1.25, azimuth: 0.4, fov: 26,
+    roll: -1.5, orbit: 0, spin: 0.02, shift: 1, bright: 1, layers: L(0, 0, 0), steady: true, fit: 0.7, lift: 0.09, fly: 2,
+    props: { atom: {} },
   },
   join: {
     target: [0, 0.05, -0.2], dist: 17.5, polar: 1.17, azimuth: -0.78, fov: 34,
@@ -171,9 +247,15 @@ const VIEWS = {
     target: [0, 0, -0.3], dist: 22, polar: 1.24, azimuth: -0.42, fov: 30,
     roll: -1.2, orbit: 0.018, spin: 0, shift: 0.88, bright: 0.55, layers: L(0.9, 0.8, 0.8),
   },
+  // CV: the event, dim behind the long text; beside the career sections, a globe with its places.
   cv: {
-    target: [0, 0.2, 0.2], dist: 22, polar: 0.98, azimuth: 2.35, fov: 30,
-    roll: 0.6, orbit: -0.016, spin: 0, shift: 0.92, bright: 0.5, layers: L(0.9, 0.8, 0.8),
+    target: [0, 0.2, 0.2], dist: 22, polar: 0.98, azimuth: GLOBE_AZIMUTH, fov: 30,
+    roll: 0.6, orbit: -0.016, spin: 0, shift: 0.92, bright: 0.15, layers: L(0.9, 0.8, 0.8),
+  },
+  'cv-globe': {
+    target: [0, 0, 0], dist: 21, polar: (90 - GLOBE_CENTER.lat) * Math.PI / 180, azimuth: GLOBE_AZIMUTH, fov: 30,
+    roll: 0.6, orbit: 0, spin: 0, shift: 1, bright: 1, layers: L(0, 0, 0), steady: true, fit: 0.72, lift: 0.09, fly: 2.4,
+    props: { globe: {} },
   },
   // The lone-track pose is computed from the data once the tracks have loaded (see soloView).
   notfound: {
@@ -200,42 +282,111 @@ const VIEWS = {
   if (eye.dot(new THREE.Vector3().setFromSphericalCoords(1, wide.polar, wide.azimuth)) < 0) eye.negate();
   const sph = new THREE.Spherical().setFromVector3(eye);
   Object.assign(close, { target: TOY_VERTEX.clone().addScaledVector(bAxis, TOY.flight * 1.5).toArray(), polar: sph.phi, azimuth: sph.theta });
+  // The transformer view: the jet upright, the target halfway up the jet and the transformer.
+  const ai = VIEWS['research-ai'];
+  ai.target = TOY_VERTEX.clone().addScaledVector(TOY_AXIS.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), ai.roll), 2.95).toArray();
+  ai.fallback = wide;
 }
-const HARDWARE = new Set(['hardware', 'hardware-module', 'hardware-exploded']);
-// If the hardware cannot be built (hexaboard.js failed to load), every hardware view shows the
-// endcap pose with the event at full strength instead of an empty close-up.
-const HARDWARE_FALLBACK = { ...VIEWS.hardware, layers: L(0.85, 0.9, 0.9), orbit: 0.02 };
+// If the hardware cannot be built (a module failed to load, or the browser lacks what it needs),
+// every hardware view shows the event at full strength instead of an empty stage.
+const HARDWARE_FALLBACK = {
+  target: [0, 0.1, -1.2], dist: 20, polar: 1.15, azimuth: 0.74, fov: 30,
+  roll: 0, orbit: 0.02, spin: 0, shift: 0.97, bright: 1, layers: L(0.85, 0.9, 0.9), fit: 0.9,
+};
+for (const name in VIEWS) if (name.startsWith('hardware')) VIEWS[name].fallback = HARDWARE_FALLBACK;
+// An illustration of the teaching page that cannot be built leaves the page's event view.
+for (const name in VIEWS) if (name.startsWith('teaching-')) VIEWS[name].fallback = VIEWS.teaching;
+VIEWS['cv-globe'].fallback = VIEWS.cv;
 const HIT_LAYERS = ['eb', 'ee', 'hb'];
 
+// Props: the larger objects that only some views show. Each lives in its own module, fetched and
+// built the first time a view asks for it. keys: the settings a view can override, with their
+// defaults (the scene interpolates them between views); make: builds it from its module and
+// returns { group, update(p, fade, dt, still), compile?, dispose }, where update returns 0 when
+// nothing on it moves on its own, 1 for slow motion and 2 for motion that wants every frame;
+// place: puts its group in the detector frame. lit: it is made of lit materials (and needs the
+// environment map). root: 'event' for an object that belongs to the event and rolls with it.
+const PROPS = {
+  // One HGCAL endcap. cut: the cutaway (a quadrant removed); exE, exH: the layers of its two
+  // parts pulled apart; absE, absH: how solid their absorbers are; showH: how much of the rear part
+  // shows; dimE, dimH: brightness; glowE, glowH: how strongly the boards glow.
+  endcap: {
+    keys: { cut: 1, exE: 0, exH: 0, absE: 0.3, absH: 0.3, showH: 1, dimE: 1, dimH: 1, glowE: 1, glowH: 1 },
+    lit: true,
+    load: () => import('./hgcal.js'),
+    make: (mod, ctx) => mod.createEndcap(ctx),
+    place: g => { g.position.set(0, 0, ENDCAP_Z); g.rotation.y = Math.PI; },
+  },
+  // One cassette. elec, serv: its electronics and services in place; pick: one module taken out.
+  cassette: {
+    keys: { elec: 1, serv: 1, pick: 0 },
+    lit: true,
+    load: () => import('./cassette.js'),
+    make: (mod, ctx) => mod.createCassette(ctx),
+    place: g => { g.position.copy(CASSETTE_POS); g.quaternion.copy(CASSETTE_Q); },
+  },
+  // Illustrations for the teaching page (classroom.js): an electromagnetic wave, a spinning top and
+  // the electron cloud of a hydrogen atom, each standing at the detector's center.
+  wave: { keys: {}, load: () => import('./classroom.js'), make: (mod, ctx) => mod.createWave(ctx) },
+  top: { keys: {}, lit: true, load: () => import('./classroom.js'), make: (mod, ctx) => mod.createTop(ctx) },
+  atom: { keys: {}, load: () => import('./classroom.js'), make: (mod, ctx) => mod.createAtom(ctx) },
+  // The globe of the CV page, turned so that the middle of its map faces the view's camera.
+  globe: {
+    keys: {},
+    load: () => import('./globe.js'),
+    make: (mod, ctx) => mod.createGlobe(ctx),
+    place: g => { g.rotation.y = GLOBE_AZIMUTH - GLOBE_CENTER.lon * Math.PI / 180; },
+  },
+  // Illustration: a transformer classifying the illustrated jet, built on the ends of its tracks.
+  transformer: {
+    keys: {},
+    root: 'event',
+    load: () => import('./transformer.js'),
+    make: (mod, ctx) => mod.createTransformer({ renderer: ctx.renderer, clock: ctx.clock, tips: ctx.jetTips }),
+    place: g => { g.position.copy(TOY_VERTEX); g.quaternion.copy(TOY_Q); },
+  },
+};
+
 // State vector interpolated between views (dist is stored as a logarithm so zooms feel even).
+// The props' settings follow the fixed entries: for each prop, how much of it shows, then its keys.
 const K = { tx: 0, ty: 1, tz: 2, dist: 3, polar: 4, azimuth: 5, fov: 6, shift: 7, event: 8, ecal: 9,
-  hits: 10, hgcal: 11, module: 12, bright: 13, explode: 14, solo: 15, roll: 16, fog: 17, fit: 18, mrot: 19,
+  hits: 10, mlift: 11, module: 12, bright: 13, explode: 14, solo: 15, roll: 16, fog: 17, fit: 18, mrot: 19,
   jets: 20, toy: 21, lift: 22 };
-const NK = 23;
+const NK_FIXED = 23;
+const SLOT = {};                      // prop name -> { show, keys: { key -> index } }
+let NK = NK_FIXED;
+for (const name in PROPS) {
+  SLOT[name] = { show: NK++, keys: {} };
+  for (const k in PROPS[name].keys) SLOT[name].keys[k] = NK++;
+}
 const ANGLES = [K.azimuth, K.roll];
 
-function viewVector(def, out = new Float64Array(NK)) {
+// hold: a prop the view does not show keeps the settings already in `out` (so that it fades out
+// as it is) instead of returning to its defaults.
+function viewVector(def, out = new Float64Array(NK), hold = false) {
   out[K.tx] = def.target[0]; out[K.ty] = def.target[1]; out[K.tz] = def.target[2];
   out[K.dist] = Math.log(def.dist); out[K.polar] = def.polar; out[K.azimuth] = def.azimuth;
   out[K.fov] = def.fov; out[K.shift] = def.shift; out[K.bright] = def.bright;
   out[K.event] = def.layers.event; out[K.ecal] = def.layers.ecal; out[K.hits] = def.layers.hits;
-  out[K.hgcal] = def.layers.hgcal; out[K.module] = def.layers.module;
+  out[K.mlift] = def.mlift || 0; out[K.module] = def.layers.module;
   out[K.explode] = def.explode || 0; out[K.solo] = def.solo || 0; out[K.roll] = def.roll;
   out[K.fog] = def.fog || 0; out[K.fit] = def.fit || FIT; out[K.mrot] = def.mrot || 0;
   out[K.jets] = def.jets || 0; out[K.toy] = def.toy || 0; out[K.lift] = def.lift || 0;
+  for (const name in PROPS) {
+    const keys = PROPS[name].keys, slot = SLOT[name], p = def.props && def.props[name];
+    out[slot.show] = p ? (p.show ?? 1) : 0;
+    for (const k in keys) {
+      if (p) out[slot.keys[k]] = p[k] ?? keys[k];
+      else if (!hold) out[slot.keys[k]] = keys[k];
+    }
+  }
   return out;
 }
+// What a view needs built before it can show: the module, and its props.
+const needsModule = def => def.layers.module > 0;
+const propsOf = def => (def.props ? Object.keys(def.props) : []);
 
-const TAU = Math.PI * 2;
-const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
-const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const nearestAngle = (a, ref) => a + TAU * Math.round((ref - a) / TAU);
-
-// Small deterministic PRNG so the replay stagger is the same on every visit.
-function rng(seed) {
-  let s = seed >>> 0;
-  return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-}
 
 // ---------------------------------------------------------------------------------------------
 // Shaders
@@ -659,30 +810,6 @@ function glowTexture() {
   return t;
 }
 
-// Opacity control for objects whose materials we do not own (hexaboard.js). Opaque materials
-// become transparent only while partly faded, and then stop writing depth so a half-faded layer
-// never hides the event behind it.
-function fadeable(group) {
-  const mats = new Set();
-  group.traverse(o => { const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => mats.add(x)); });
-  return { group, f: -1, mats: [...mats].map(m => ({ m, opacity: m.opacity, transparent: m.transparent, depthWrite: m.depthWrite })) };
-}
-function setTransparent(entry, on) {
-  for (let i = 0; i < entry.mats.length; i++) {
-    const r = entry.mats[i];
-    const t = r.transparent || on;
-    if (t !== r.m.transparent) { r.m.transparent = t; r.m.needsUpdate = true; }
-    r.m.depthWrite = r.depthWrite && !on;
-  }
-}
-function setFade(entry, f) {
-  if (!entry || Math.abs(f - entry.f) < 1e-3) return;
-  entry.f = f;
-  entry.group.visible = f > 0.003;
-  for (let i = 0; i < entry.mats.length; i++) entry.mats[i].m.opacity = entry.mats[i].opacity * f;
-  setTransparent(entry, f < 0.995);
-}
-
 // ---------------------------------------------------------------------------------------------
 // Scene
 // ---------------------------------------------------------------------------------------------
@@ -699,17 +826,22 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   scene.fog = new THREE.Fog(COLOR.background, FOG_OFF[0], FOG_OFF[1]);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.02, 80);
   const eventRoot = new THREE.Group();       // rolls about the beam axis
-  const hgcalRoot = new THREE.Group();       // fixed in the detector frame
-  // The hardware draws after the (transparent) event, so while the layer fades in it covers the
-  // tracks behind it gradually instead of letting them shine through until it turns opaque.
-  hgcalRoot.renderOrder = 10;
-  scene.add(eventRoot, hgcalRoot);
-  // Only the HGCAL hardware uses lit materials; the event is self-lit.
+  const fixedRoot = new THREE.Group();       // fixed in the detector frame: the module and the props
+  // These draw after the (transparent) event, so while one fades in it covers the tracks behind
+  // it gradually instead of letting them shine through until it turns opaque.
+  fixedRoot.renderOrder = 10;
+  scene.add(eventRoot, fixedRoot);
+  // Only the module and the props use lit materials; the event is self-lit. The fill light, from
+  // behind the endcap, is on only while the endcap shows (it is always in the scene, so that
+  // turning it on never recompiles a shader).
   const hemi = new THREE.HemisphereLight(0xcfe3ff, 0x10141c, 0.9);
   const key = new THREE.DirectionalLight(0xffffff, 2.2);
-  key.position.set(3, 4, 9);
-  key.target.position.set(0, 0, LAYER_Z);
-  scene.add(hemi, key, key.target);
+  key.position.set(3, 4, 5.55).add(CASSETTE_CENTER);
+  key.target.position.copy(CASSETTE_CENTER);
+  const fill = new THREE.DirectionalLight(0x9fc4ff, 0);
+  fill.position.set(-6, 2, ENDCAP_Z - 5);
+  fill.target.position.set(0, 0, ENDCAP_Z);
+  scene.add(hemi, key, key.target, fill, fill.target);
 
   let needsRender = true;              // force one frame even if nothing moves
   let disposed = false;
@@ -878,7 +1010,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   const toy = (() => {
     const rand = rng(1725);
     const B = 3.8;                      // T: charged particles curl in the solenoid's field
-    const chains = [], delays = [];
+    const chains = [], delays = [], tips = [];
     function helix(origin, pt, eta, phi, q) {
       const R = pt / (0.3 * B), th0 = phi - q * Math.PI / 2, sinh = Math.sinh(eta);
       const cx = origin.x - R * Math.cos(th0), cy = origin.y - R * Math.sin(th0);
@@ -893,14 +1025,19 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     }
     const group = new THREE.Group();
     const cones = [];
-    let sv = TOY_VERTEX.clone(), wi = 0;
+    let sv = TOY_VERTEX.clone(), wi = 0, core = -1;
     for (const quark of TOY.quarks) {
+      core++;
       const eta = TOY.eta + quark.deta, phi = TOY.phi + quark.dphi;
       const color = new THREE.Color(quark.b ? COLOR.toyB : COLOR.toyW[wi++]);
       const tint = [color.r, color.g, color.b, 0];
       const add = (origin, pt, delta, angle, delay) => {
         const pts = helix(origin, Math.max(1.5, pt), eta + delta * Math.cos(angle), phi + delta * Math.sin(angle), rand() < 0.5 ? 1 : -1);
-        if (pts.length >= 9) { chains.push({ pts, tint }); delays.push(delay); }
+        if (pts.length < 9) return;
+        chains.push({ pts, tint }); delays.push(delay);
+        // Where the track ends, in the illustration's own frame (see TOY_Q), for the transformer.
+        const end = new THREE.Vector3().fromArray(pts, pts.length - 3).sub(TOY_VERTEX).applyQuaternion(TOY_Q_INV);
+        tips.push({ p: end.toArray(), color: [color.r, color.g, color.b], q: core, w: pt });
       };
       if (quark.b) {
         // A few tracks from the collision point, clear of the b hadron's line of flight, and its
@@ -941,66 +1078,110 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     group.visible = false;
     group.renderOrder = 3.2;
     eventRoot.add(group);
-    return { group, cones, flight, dots: N, pvGlow, svGlow };
+    return { group, cones, flight, dots: N, pvGlow, svGlow, tips };
   })();
 
-  // --- HGCAL hardware (lazy) -----------------------------------------------------------------
-  let hgcal = null;                     // { layer, module, layerFade, moduleFade, loadedAt }
-  let hgcalFailed = false;
-  let hgcalPromise = null;
-  const modulePivot = new THREE.Group();
-  modulePivot.position.copy(MODULE_POS);
-  modulePivot.quaternion.copy(MODULE_Q);
-  hgcalRoot.add(modulePivot);
+  // --- the module and the props (lazy) --------------------------------------------------------
+  // Image-based lighting for the metal, silicon and gold of the hardware (the event is unlit).
   let envTexture = null;
-  let lastExplode = -1, lastMrot = -1;
-
-  function ensureHGCAL() {
-    if (hgcalPromise) return hgcalPromise;
-    const env = import('three/addons/environments/RoomEnvironment.js').catch(() => null);
-    hgcalPromise = Promise.all([import('./hexaboard.js'), env]).then(async ([mod, envMod]) => {
-      if (disposed) return;
-      // Image-based lighting for the metal, silicon and gold of the hardware (the event is unlit).
-      if (envMod) {
+  let envPromise = null;
+  function ensureEnv() {
+    if (!envPromise) {
+      envPromise = import('three/addons/environments/RoomEnvironment.js').then(envMod => {
+        if (disposed) return;
         const pmrem = new THREE.PMREMGenerator(renderer);
         envTexture = pmrem.fromScene(new envMod.RoomEnvironment(renderer), 0.04).texture;
         scene.environment = envTexture;
         pmrem.dispose();
-      }
-      const layer = mod.createLayer({ innerRadius: 0.32, outerRadius: 1.55, moduleSize: 0.167 });
-      layer.group.position.set(0, 0, LAYER_Z);
-      const module = mod.createModule({ explodeSpacing: EXPLODE_SPACING });
-      const layerFade = fadeable(layer.group), moduleFade = fadeable(module.group);
-      // Compile the shaders (opaque and fading variants) off-screen first, so the fly-in does not
-      // stutter; later switches between the two reuse the cached programs.
-      const staging = new THREE.Scene();
-      staging.add(layer.group, module.group);
-      const parallel = renderer.compileAsync && renderer.extensions.has('KHR_parallel_shader_compile');
+      }).catch(() => { /* the hardware is then lit by the two lights alone */ });
+    }
+    return envPromise;
+  }
+  // Compile an object's shaders off-screen before it joins the scene, so that its first frame
+  // does not stutter.
+  async function precompile(object) {
+    const staging = new THREE.Scene();
+    staging.add(object);
+    try {
+      if (renderer.compileAsync && renderer.extensions.has('KHR_parallel_shader_compile')) await renderer.compileAsync(staging, camera, scene);
+      else renderer.compile(staging, camera, scene);
+    } catch { /* compiles on first draw instead */ }
+    staging.remove(object);
+  }
+  // The view in use turns out to need something that cannot be built: show its fallback instead.
+  function useFallback() {
+    if (disposed || !def.fallback || !broken(VIEWS[viewName])) return;
+    def = def.fallback;
+    if (!still) startTransition(def, null);
+    else if (!dip.active) setState(def);  // (a pending dip applies the new def itself)
+  }
+
+  // One silicon module (hexaboard.js).
+  let module = null;                    // { api, fade, loadedAt }
+  let moduleFailed = false;
+  let modulePromise = null;
+  const modulePivot = new THREE.Group();
+  modulePivot.position.copy(MODULE_SEAT);
+  fixedRoot.add(modulePivot);
+  const moduleSeat = MODULE_SEAT.clone();
+  let lastExplode = -1, lastMrot = -1, lastMlift = -1;
+
+  function ensureModule() {
+    if (modulePromise) return modulePromise;
+    modulePromise = Promise.all([import('./hexaboard.js'), ensureEnv()]).then(async ([mod]) => {
+      if (disposed) return;
+      const api = mod.createModule({ explodeSpacing: EXPLODE_SPACING });
+      const entry = fadeable(api.group);
+      // Both the opaque and the fading variants of its shaders; later switches reuse them.
       for (const on of [false, true]) {
-        setTransparent(layerFade, on);
-        setTransparent(moduleFade, on);
-        try {
-          if (parallel) await renderer.compileAsync(staging, camera, scene);
-          else renderer.compile(staging, camera, scene);
-        } catch { /* compiles on first draw instead */ }
+        setTransparent(entry, on);
+        await precompile(api.group);
       }
       if (disposed) return;
-      hgcalRoot.add(layer.group);
-      modulePivot.add(module.group);
-      hgcal = { layer, module, layerFade, moduleFade, loadedAt: clock() };
-      setFade(layerFade, 0);
-      setFade(moduleFade, 0);
+      modulePivot.add(api.group);
+      module = { api, fade: entry, loadedAt: clock() };
+      setFade(entry, 0);
       lastExplode = lastMrot = -1;
     }).catch(err => {
-      warn('HGCAL model unavailable', err);
-      hgcalFailed = true;
-      if (!HARDWARE.has(viewName) || disposed) return;
-      def = HARDWARE_FALLBACK;
-      if (!still) startTransition(def, null);
-      else if (!dip.active) setState(def);  // (a pending dip applies the new def itself)
+      warn('HGCAL module unavailable', err);
+      moduleFailed = true;
+      useFallback();
     }).finally(() => { needsRender = true; });
-    return hgcalPromise;
+    return modulePromise;
   }
+
+  const props = {};                     // name -> { api, loadedAt, failed, promise, p }
+  function ensureProp(name) {
+    const e = props[name] || (props[name] = { api: null, loadedAt: 0, failed: false, promise: null, p: { ...PROPS[name].keys } });
+    if (e.promise) return e.promise;
+    const spec = PROPS[name];
+    e.promise = Promise.all([spec.load(), spec.lit ? ensureEnv() : null]).then(async ([mod]) => {
+      if (disposed) return;
+      const api = spec.make(mod, { renderer, camera, clock, jetTips: toy.tips });
+      if (spec.place) spec.place(api.group);
+      if (api.compile) await api.compile(camera, scene); else await precompile(api.group);
+      if (disposed) { api.dispose?.(); return; }
+      (spec.root === 'event' ? eventRoot : fixedRoot).add(api.group);
+      e.api = api;
+      e.loadedAt = clock();
+      // The module sits on the cassette where the cassette says its place is.
+      if (api.pickSite) { moduleSeat.fromArray(api.pickSite).applyQuaternion(api.group.quaternion).add(api.group.position); moduleSeat.z = MODULE_SEAT.z; lastMlift = -1; }
+    }).catch(err => {
+      warn(`${name} unavailable`, err);
+      e.failed = true;
+      useFallback();
+    }).finally(() => { needsRender = true; });
+    return e.promise;
+  }
+  // What a view still waits for, and whether it can be shown at all.
+  const ready = d => (!needsModule(d) || !!module) && propsOf(d).every(n => props[n] && props[n].api);
+  const broken = d => (needsModule(d) && moduleFailed) || propsOf(d).some(n => props[n] && props[n].failed);
+  function ensure(d) {
+    const waits = propsOf(d).map(ensureProp);
+    if (needsModule(d)) waits.push(ensureModule());
+    return Promise.all(waits);
+  }
+  const viewDef = name => { const d = VIEWS[name]; return d.fallback && broken(d) ? d.fallback : d; };
 
   // --- view state ----------------------------------------------------------------------------
   let viewName = VIEWS[initialView] ? initialView : 'home';
@@ -1038,7 +1219,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   }
 
   function setState(d) {
-    viewVector(d, state);
+    viewVector(d, state, true);
     vel.fill(0);
     tr.active = false;
     needsRender = true;
@@ -1047,7 +1228,14 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   function startTransition(d, dur, from = null) {
     tr.from.set(from || state);
     if (from) tr.v0.fill(0); else tr.v0.set(vel);
-    viewVector(d, tr.to);
+    tr.to.set(tr.from);
+    viewVector(d, tr.to, true);
+    // A prop that is not showing yet takes its new settings at once (it fades in as it will be).
+    for (const name in SLOT) {
+      const slot = SLOT[name];
+      if (tr.from[slot.show] > 0.01) continue;
+      for (const k in slot.keys) { tr.from[slot.keys[k]] = tr.to[slot.keys[k]]; tr.v0[slot.keys[k]] = 0; }
+    }
     tr.v1.fill(0);
     if (!still) { tr.v1[K.azimuth] = d.orbit; tr.v1[K.roll] = d.spin; }
     for (const k of ANGLES) {
@@ -1058,7 +1246,7 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     if (dur == null) {
       const span = Math.abs(t[K.azimuth] - f[K.azimuth]) + Math.abs(t[K.polar] - f[K.polar]) +
         0.35 * Math.abs(t[K.dist] - f[K.dist]) + 0.15 * Math.hypot(t[K.tx] - f[K.tx], t[K.ty] - f[K.ty], t[K.tz] - f[K.tz]);
-      dur = clamp(1.35 + 0.22 * span, 1.4, 1.8);
+      dur = d.fly || clamp(1.35 + 0.22 * span, 1.4, 1.8);
     }
     // Choreography: when pulling back from a close-up, back off first and pan later; when diving
     // in, aim first and close in later. This keeps the camera from cutting through the HGCAL
@@ -1068,9 +1256,24 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     const win = (keys, a, b) => { for (const k of keys) { tr.a[k] = a; tr.b[k] = b; } };
     if (zoom > 0.6) { win([K.dist, K.polar, K.azimuth], 0, 0.8); win([K.tx, K.ty, K.tz], 0.3, 1); }
     else if (zoom < -0.6) { win([K.tx, K.ty, K.tz], 0, 0.75); win([K.dist], 0.2, 1); }
-    for (const k of [K.event, K.ecal, K.hits, K.hgcal, K.module, K.explode, K.solo, K.mrot, K.jets, K.toy]) {
+    // (mrot takes the whole flight: the module moves with the camera's target as it lies back.)
+    for (const k of [K.event, K.ecal, K.hits, K.module, K.explode, K.solo, K.jets, K.toy]) {
       if (t[k] < f[k] - 1e-3) win([k], 0, 0.55);
-      else if (t[k] > f[k] + 1e-3) win([k], k === K.explode || k === K.mrot ? 0.4 : 0.3, 1);
+      else if (t[k] > f[k] + 1e-3) win([k], k === K.explode ? 0.4 : 0.3, 1);
+    }
+    // The module leaves the cassette once it has appeared, and settles back before it goes.
+    if (t[K.mlift] > f[K.mlift] + 1e-3) { win([K.module], 0.25, 0.6); win([K.mlift], 0.5, 1); }
+    else if (t[K.mlift] < f[K.mlift] - 1e-3) { win([K.mlift], 0, 0.5); win([K.module], 0.4, 0.75); }
+    // Props: what leaves goes early, what arrives comes late, and so do the parts that come off
+    // or go back on.
+    for (const name in SLOT) {
+      const slot = SLOT[name];
+      for (const k of [slot.show, ...Object.values(slot.keys)]) {
+        if (t[k] < f[k] - 1e-3) win([k], 0, 0.55);
+        else if (t[k] > f[k] + 1e-3) win([k], 0.3, 1);
+      }
+      // The picked module's place empties as the detailed module appears there.
+      if (slot.keys.pick != null) { tr.a[slot.keys.pick] = tr.a[K.module]; tr.b[slot.keys.pick] = tr.b[K.module]; }
     }
     // (Fog takes the whole flight: its log mapping already makes it set in late and lift early.)
     tr.dur = dur;
@@ -1115,9 +1318,10 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     if (next === viewName) return;
     const prev = def;
     viewName = next;
-    def = hgcalFailed && HARDWARE.has(next) ? HARDWARE_FALLBACK : VIEWS[next];
+    const wanted = VIEWS[next];
+    const loading = ensure(wanted);    // (starts building whatever the view needs)
+    def = viewDef(next);
     const token = ++flightToken;       // cancels a flight still waiting for the hardware
-    if (HARDWARE.has(next)) ensureHGCAL();
     needsRender = true;
     loopAt = 0;
 
@@ -1135,11 +1339,13 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
     dip.active = false;                 // (a cut-off dip fades back up in update)
     entrancePending = false;
     if (instant) { setState(def); startClocks(prev, 0.3); return; }
-    if (HARDWARE.has(next) && !hgcal) {
-      // The hardware is built on first use (textures painted, shaders compiled). Hold the flight
-      // until it is ready, briefly, so that work does not stall the camera halfway.
-      Promise.race([hgcalPromise, new Promise(r => setTimeout(r, 1500))]).then(() => {
+    if (def === wanted && !ready(wanted)) {
+      // The module and the props are built on first use (textures painted, shaders compiled).
+      // Hold the flight until they are ready, briefly, so that work does not stall the camera
+      // halfway.
+      Promise.race([loading, new Promise(r => setTimeout(r, 2500))]).then(() => {
         if (token !== flightToken || disposed) return;
+        def = viewDef(next);
         if (still) startDip(0.5, () => setState(def));   // paused while waiting: no flight
         else startTransition(def, null);
       });
@@ -1187,13 +1393,13 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
   }
 
   // Initial pose: the requested view; a view with an entrance starts at its entrance pose.
-  if (HARDWARE.has(viewName)) ensureHGCAL();
+  if (needsModule(def) || def.props) ensure(def);
   else {
     // Fetch the hardware code in idle time once the event is in, so a later visit to the hardware
     // page only has to build it. (The 3D objects themselves are created only when needed.)
     const idle = cb => (window.requestIdleCallback ? window.requestIdleCallback(cb) : setTimeout(cb, 0));
     setTimeout(() => idle(() => {
-      if (disposed || hgcalPromise) return;
+      if (disposed || modulePromise) return;
       import('./hexaboard.js').catch(() => {});
       import('three/addons/environments/RoomEnvironment.js').catch(() => {});
     }), 6000);
@@ -1492,19 +1698,41 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       toy.flight.visible = toy.flight.material.opacity > 0.003;
     }
 
-    // HGCAL.
-    if (hgcal) {
-      const a = now - hgcal.loadedAt;
-      const hf = smooth(0, 0.8, a) * fade * clamp(state[K.bright], 0, 1);
+    // The props.
+    const lit = fade * clamp(state[K.bright], 0, 1);
+    for (const name in props) {
+      const e = props[name];
+      if (!e.api) continue;
+      const slot = SLOT[name], a = now - e.loadedAt;
       if (a < 0.8) moving = true;
-      setFade(hgcal.layerFade, clamp(state[K.hgcal], 0, 1) * hf);
-      setFade(hgcal.moduleFade, clamp(state[K.module], 0, 1) * hf);
+      for (const k in slot.keys) e.p[k] = state[slot.keys[k]];
+      const f = clamp(state[slot.show], 0, 1) * smooth(0, 0.8, a) * lit;
+      const m = e.api.update(e.p, f, dt, still);
+      if (m === 2) moving = true; else if (m) drifting = true;
+      if (name === 'endcap') fill.intensity = 0.6 * f;
+    }
+
+    // The module.
+    if (module) {
+      const a = now - module.loadedAt;
+      if (a < 0.8) moving = true;
+      setFade(module.fade, clamp(state[K.module], 0, 1) * smooth(0, 0.8, a) * lit);
       const ex = clamp(state[K.explode], 0, 1);
-      if (Math.abs(ex - lastExplode) > 1e-4) { lastExplode = ex; hgcal.module.setExplode(ex); }
-      const mr = clamp(state[K.mrot], 0, 1);
-      if (Math.abs(mr - lastMrot) > 1e-4) { lastMrot = mr; modulePivot.quaternion.slerpQuaternions(MODULE_Q, MODULE_Q_EXPLODED, smooth(0, 1, mr)); }
+      if (Math.abs(ex - lastExplode) > 1e-4) { lastExplode = ex; module.api.setExplode(ex); }
+      const mr = clamp(state[K.mrot], 0, 1), ml = clamp(state[K.mlift], 0, 1);
+      if (Math.abs(mr - lastMrot) > 1e-4 || Math.abs(ml - lastMlift) > 1e-4) {
+        lastMrot = mr; lastMlift = ml;
+        const up = smooth(0, 1, ml);
+        modulePivot.position.lerpVectors(moduleSeat, MODULE_POS, up);
+        modulePivot.quaternion.slerpQuaternions(MODULE_Q_SEAT, MODULE_Q, up);
+        if (mr > 0) {
+          const out = smooth(0, 1, mr);
+          modulePivot.position.addScaledVector(MODULE_OUT, out);
+          modulePivot.quaternion.slerp(MODULE_Q_EXPLODED, out);
+        }
+      }
       // The sensor-hit animation runs only on the exploded module; update() says when it changed.
-      if (!still && hgcal.module.group.visible && hgcal.module.update(dt)) moving = true;
+      if (!still && module.api.group.visible && module.api.update(dt)) moving = true;
     }
 
     return moving;
@@ -1563,7 +1791,8 @@ export async function initScene({ canvas, reducedMotion = false, initialView = '
       if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose(); });
     });
     glowTex.dispose();
-    if (hgcal) { hgcal.layer.dispose?.(); hgcal.module.dispose?.(); }
+    if (module) module.api.dispose?.();
+    for (const name in props) props[name].api?.dispose?.();
     if (envTexture) envTexture.dispose();
     renderer.dispose();
   }

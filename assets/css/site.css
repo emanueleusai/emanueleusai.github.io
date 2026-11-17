@@ -144,8 +144,10 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
 .no-webgl .scene-fallback { display: block; }
 .no-webgl #scene { display: none; }
 
-/* Pages can ask for a dimmer backdrop for long text (main[data-dim]). */
-body[data-dim="high"] .scene-veil { background: rgba(4, 6, 11, 0.7); }
+/* Pages can ask for a dimmer backdrop for long text (main[data-dim]). This applies to the static
+   image only: with the 3D scene running, the page's view dims the event itself (scene.js: bright),
+   so that a section can show something at full brightness, such as the CV's globe. */
+.no-webgl body[data-dim="high"] .scene-veil { background: rgba(4, 6, 11, 0.7); }
 
 /* --------------------------------------------------------------------------
    Header / navigation
@@ -529,6 +531,8 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
 .hero .scene-caption--note { margin-top: 28px; }
 .scene-gap--note { display: flex; align-items: flex-end; height: 38vh; padding-bottom: clamp(32px, 5vw, 56px); }
 @media (max-width: 720px) { .scene-gap--note { height: 44vh; } }
+/* A note above a tall subject: on phones, where the subject shows only in the gap, the gap is taller. */
+@media (max-width: 720px) { .scene-gap--tall { height: 80vh; } }
 .about-row { grid-template-columns: minmax(0, 1fr) 200px; align-items: start; }
 .about-photo img { aspect-ratio: 1; object-fit: cover; }
 @media (max-width: 820px) { .about-row { grid-template-columns: 1fr; } .about-photo { display: none; } }

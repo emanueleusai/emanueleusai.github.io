@@ -168,9 +168,9 @@
       </div>
     </section>
 
-    <section class="section" data-scene="research-side" aria-labelledby="ai-title">
-      <div class="scene-gap scene-gap--legend" aria-hidden="true">
-        <p class="scene-caption"><span class="legend-item">Side view:</span> <span class="legend-item"><span class="legend-dot legend-dot--ecal"></span>electromagnetic calorimeter</span> <span class="legend-item"><span class="legend-dot legend-dot--hcal"></span>hadronic calorimeter</span></p>
+    <section class="section" data-scene="research-ai" aria-labelledby="ai-title">
+      <div class="scene-gap scene-gap--note scene-gap--tall" aria-hidden="true">
+        <p class="scene-caption scene-caption--note">Illustration, not a CMS model: a transformer classifying a jet. Each particle of the jet becomes a token; in every layer each token attends to the others; the tokens are then combined into one score for each kind of jet.</p>
       </div>
       <div class="container" id="ai">
         <div class="panel panel--accent reveal">
@@ -183,7 +183,7 @@
             <li><span class="tag">CMS Open Data</span></li>
             <li><span class="tag">data quality</span></li>
           </ul>
-          <p>Collider analyses usually compress each collision into a short list of reconstructed objects, such as jets, electrons and muons, before any machine learning is applied. With a team at Google Research, we explored a different route: end-to-end deep learning, in which convolutional and graph neural networks learn directly from low-level detector data, the hits in the tracker and the energy deposits in the calorimeters you see in the background.</p>
+          <p>Collider analyses usually compress each collision into a short list of reconstructed objects, such as jets, electrons and muons, before any machine learning is applied. With a team at Google Research, we explored a different route: end-to-end deep learning, in which convolutional and graph neural networks learn directly from low-level detector data, the hits in the tracker and the energy deposits in the calorimeters.</p>
           <p>We used it to identify particles and whole collision events in both regular and boosted topologies, and extended it to top-quark mass regression. At Alabama I continue to work on improving particle reconstruction and event identification with AI.</p>
           <p>So that others can reproduce and build on this work, I produced CMS Open Data sets for machine learning with low-level detector inputs, including tracker hits. As manager of Data Quality Monitoring and Data Certification in CMS, I worked on machine-learning-based data certification to significantly reduce the human input needed to decide which data are good for physics.</p>
           <ul>
@@ -211,7 +211,10 @@
       </div>
     </section>
 
-    <section class="section" id="detectors" aria-labelledby="detectors-title">
+    <section class="section" id="detectors" data-scene="research-side" aria-labelledby="detectors-title">
+      <div class="scene-gap scene-gap--legend" aria-hidden="true">
+        <p class="scene-caption"><span class="legend-item">The CMS collision, side view:</span> <span class="legend-item"><span class="legend-dot legend-dot--ecal"></span>electromagnetic calorimeter</span> <span class="legend-item"><span class="legend-dot legend-dot--hcal"></span>hadronic calorimeter</span></p>
+      </div>
       <div class="container">
         <div class="panel panel--hcal reveal">
           <p class="eyebrow eyebrow--hcal">05 · Detectors and computing</p>
