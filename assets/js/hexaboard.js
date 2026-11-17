@@ -1359,3 +1359,6 @@ export function createLayer(opts = {}) {
     },
   };
 }
+
+// The helpers that the HGCAL endcap (hgcal.js) and the cassette (cassette.js) reuse.
+export { hexOutline, slabGeometry, layerTextures, boardLayout, mulberry32, NOMINAL_SIZE, DIM, MM, SQ3, CHAMFER, TEX_SPAN };

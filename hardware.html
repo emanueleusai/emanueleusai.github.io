@@ -38,7 +38,7 @@
   <header class="site-header">
     <a class="brand" href="index.html">
       <img class="brand__mark" src="assets/img/mark.svg" alt="" width="28" height="28">
-      <span class="brand__text">Emanuele Usai<span class="brand__sub">Particle physics · UA</span></span>
+      <span class="brand__text">Emanuele Usai<span class="brand__sub">Particle physics professor<span class="brand__sub-more"> · University of Alabama</span></span></span>
     </a>
     <nav class="nav" aria-label="Main" data-open="false">
       <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-list">
@@ -65,22 +65,49 @@
         <a class="btn btn--primary" href="join.html">Join the lab</a>
         <a class="btn" href="#lab" data-needs-3d>Skip the 3D tour</a>
       </div>
-      <a class="scroll-cue" href="#hexaboard" data-needs-3d>Scroll to fly into the detector</a>
+      <a class="scroll-cue" href="#detector" data-needs-3d>Scroll to fly into the detector</a>
     </section>
 
     <div class="scene-gap" aria-hidden="true">
-      <p class="scene-caption">One HGCAL layer: hundreds of hexagonal silicon modules</p>
+      <p class="scene-caption">One HGCAL endcap, cut open to show its 47 layers</p>
+    </div>
+
+    <section class="section" id="detector" data-scene="hardware-layers" aria-labelledby="detector-title">
+      <div class="container">
+        <article class="panel panel--accent reveal">
+          <p class="eyebrow">01 · The detector</p>
+          <h2 id="detector-title">What is HGCAL?</h2>
+          <p>CERN’s Large Hadron Collider is being upgraded to the High-Luminosity LHC (HL-LHC), with many more collisions and therefore far more radiation in the detector. HGCAL is part of how CMS is getting ready.</p>
+          <p>HGCAL is a sampling calorimeter: dense metal plates make each incoming particle break up into a shower of lower-energy particles, and sensitive layers between the plates sample the energy of that shower. What is new is how finely it samples.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="scene-gap" aria-hidden="true">
+      <p class="scene-caption">The first 26 layers pulled apart, with the metal plates between them left out</p>
+    </div>
+
+    <section class="section" id="sensors" data-scene="hardware-cassette" aria-labelledby="sensors-title">
+      <div class="container">
+        <article class="panel panel--hcal reveal">
+          <p class="eyebrow eyebrow--hcal">02 · The sensors</p>
+          <h2 id="sensors-title">Hexagons of silicon</h2>
+          <p>Where radiation is highest, the sensitive layers are made of silicon: about six million cells, each about half a square centimeter or a little over one square centimeter in size, that record the shape of every shower in three dimensions. Silicon also responds fast enough to time its signals precisely, which helps separate the many collisions that happen in each crossing of the proton beams.</p>
+          <p>The silicon comes as hexagonal sensors, a shape that makes good use of the round wafers they are cut from and covers a surface without gaps. Farther out, where radiation is lower, plastic scintillator tiles are used instead.</p>
+          <p>The sensors are built into modules, and the modules are mounted on wedge-shaped cassettes: a copper plate that cools them and carries their readout electronics, optical fibres and power cables.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="scene-gap" aria-hidden="true">
+      <p class="scene-caption">One cassette: silicon modules on a copper cooling plate, under their electronics</p>
     </div>
 
     <section class="section" id="hexaboard" data-scene="hardware-module" aria-labelledby="hexaboard-title">
       <div class="container">
         <article class="panel panel--accent reveal">
-          <p class="eyebrow">01 · The detector</p>
+          <p class="eyebrow">03 · The board</p>
           <h2 id="hexaboard-title">What is a hexaboard?</h2>
-          <p>CERN’s Large Hadron Collider is being upgraded to the High-Luminosity LHC (HL-LHC), with many more collisions and therefore far more radiation in the detector. HGCAL is part of how CMS is getting ready.</p>
-          <p>HGCAL is a sampling calorimeter: dense metal plates make each incoming particle break up into a shower of lower-energy particles, and sensitive layers between the plates sample the energy of that shower. What is new is how finely it samples.</p>
-          <p>Where radiation is highest, the sensitive layers are made of silicon: about six million cells, each about half a square centimeter or a little over one square centimeter in size, that record the shape of every shower in three dimensions. Silicon also responds fast enough to time its signals precisely, which helps separate the many collisions that happen in each crossing of the proton beams.</p>
-          <p>The silicon comes as hexagonal sensors, a shape that makes good use of the round wafers they are cut from and covers a surface without gaps. Farther out, where radiation is lower, plastic scintillator tiles are used instead.</p>
           <p>A <strong>hexaboard</strong> is the hexagonal printed circuit board that turns a bare sensor into a working detector module. It is glued directly on top of the sensor. Holes through the board let fine wire bonds connect the sensor’s cells to the board, and readout chips on the board amplify and digitize the tiny signals, measuring how much energy landed in each cell.</p>
           <p>Once a board is glued to its sensor, it stays there, so problems are best caught before that happens. That is where my lab comes in.</p>
         </article>
@@ -88,13 +115,13 @@
     </section>
 
     <div class="scene-gap" aria-hidden="true">
-      <p class="scene-caption">A single module</p>
+      <p class="scene-caption">A single module, taken off the cassette</p>
     </div>
 
     <section class="section" id="module" data-scene="hardware-exploded" aria-labelledby="module-title">
       <div class="container">
         <article class="panel panel--ecal reveal">
-          <p class="eyebrow eyebrow--ecal">02 · The module</p>
+          <p class="eyebrow eyebrow--ecal">04 · The module</p>
           <h2 id="module-title">Inside a module</h2>
           <p>A silicon module is a thin stack of layers glued together. From the bottom up:</p>
           <ol class="steps">
@@ -126,7 +153,7 @@
     <section class="section" id="lab" data-scene="hardware" aria-labelledby="lab-title">
       <div class="container">
         <article class="panel panel--accent reveal">
-          <p class="eyebrow">03 · The lab</p>
+          <p class="eyebrow">05 · The lab</p>
           <h2 id="lab-title">The UA CMS HGCAL laboratory</h2>
           <p>I set up the UA CMS HGCAL laboratory in 2024 and manage it. Hexaboards come through the lab to be checked, so that problems are caught before the boards are built into detector modules.</p>
           <p>Our postdoctoral researcher, Axel Perraguin, works on the construction of HGCAL, and undergraduate researchers inspect and test the boards at the bench.</p>
@@ -148,7 +175,7 @@
     <section class="section" id="testing" aria-labelledby="testing-title">
       <div class="container">
         <article class="panel reveal">
-          <p class="eyebrow">04 · Quality control</p>
+          <p class="eyebrow">06 · Quality control</p>
           <h2 id="testing-title">How a board gets tested</h2>
           <p>With many boards to check, the work has to be careful and repeatable. Each board is inspected, powered up and tested.</p>
           <ol class="steps steps--photos">
@@ -176,7 +203,7 @@
     <section class="section" id="students" aria-labelledby="students-title">
       <div class="container">
         <article class="panel panel--ecal reveal">
-          <p class="eyebrow eyebrow--ecal">05 · Students</p>
+          <p class="eyebrow eyebrow--ecal">07 · Students</p>
           <h2 id="students-title">Undergraduates at the bench</h2>
           <p>Undergraduate researchers are at the center of the lab: they inspect and test the hexaboards, and the boards they check go into the detector CMS will use at the HL-LHC. Five undergraduates have worked on hexaboards with us since 2024.</p>
           <ul>
@@ -191,7 +218,7 @@
     <section class="section" id="computing" aria-labelledby="computing-title">
       <div class="container">
         <article class="panel panel--hcal reveal">
-          <p class="eyebrow eyebrow--hcal">06 · Computing</p>
+          <p class="eyebrow eyebrow--hcal">08 · Computing</p>
           <h2 id="computing-title">Computing for analysis and AI</h2>
           <p>Analyzing CMS data and training machine-learning models take a lot of computing power. I set up a high-performance computing cluster at The University of Alabama dedicated to CMS data analysis and machine learning, in service since May 2024.</p>
           <p>Running computing for a research group is not new to me: at Brown University I administered the local computing and storage cluster, with 512 processor cores and 256 TB of storage.</p>
@@ -206,7 +233,7 @@
     <section class="section" id="earlier" aria-labelledby="earlier-title">
       <div class="container">
         <article class="panel reveal">
-          <p class="eyebrow">07 · Before Alabama</p>
+          <p class="eyebrow">09 · Before Alabama</p>
           <h2 id="earlier-title">Earlier detector work</h2>
           <p>HGCAL is not the first CMS detector I have worked on. My bachelor’s thesis, in 2009, was about getting the CMS electromagnetic calorimeter ready for its first data.</p>
           <ol class="timeline">
