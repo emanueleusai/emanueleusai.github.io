@@ -17,7 +17,7 @@ No build step: plain HTML, CSS and ES modules.
 | `assets/js/hexaboard.js` | Procedural HGCAL silicon module, hexaboard and detector layer used on the Hardware page. |
 | `models/` | Event display models (glTF). |
 | `assets/img/` | Photos (resized, metadata stripped), logo, fallback and social preview images. |
-| `talks/sesaps-2026/` | The slides of the SESAPS 2026 talk: a self-contained reveal.js and Three.js deck (`index.html`, `dist/`, `img/`), built elsewhere and copied here without its speaker notes and without the name labels on the team photo. It does not use the site's header, styles or router; links to it carry `data-no-router`. |
+| `talks/sesaps-2026/` | The slides of the SESAPS 2026 talk: a self-contained reveal.js and Three.js deck (`index.html`, `dist/`, `img/`), built elsewhere and copied here without its speaker notes. The team photo keeps its first-name labels, at Emanuele's request (the site's own pages do not name people in photos). It does not use the site's header, styles or router; links to it carry `data-no-router`. |
 
 ## 3D views
 
