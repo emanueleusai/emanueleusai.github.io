@@ -171,6 +171,10 @@ body[data-dim="high"] .scene-veil { background: rgba(4, 6, 11, 0.7); }
   letter-spacing: 0.06em; text-transform: uppercase; display: block; line-height: 1.2;
 }
 .brand__text { display: flex; flex-direction: column; line-height: 1.2; }
+/* The university is written out where the line fits: beside the full menu on wide screens, and
+   beside the menu button on screens that are not too narrow. */
+.brand__sub-more { display: none; }
+@media (min-width: 540px) and (max-width: 960px), (min-width: 1100px) { .brand__sub-more { display: inline; } }
 
 .nav { display: flex; align-items: center; }
 .nav__list { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
