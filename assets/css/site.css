@@ -589,6 +589,7 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
 .join-gallery { display: grid; gap: 20px; }
 .join-gallery__row { display: flex; gap: 16px; align-items: flex-start; }
 .join-gallery__item { flex: 1.3333 1 0; min-width: 0; }
+.join-gallery__item--wide { flex-grow: 1.5; }
 .join-gallery__item--portrait { flex-grow: 0.75; }
 .join-gallery__item--pano { flex-grow: 1.6842; }
 @media (max-width: 640px) {
